@@ -869,6 +869,8 @@
             let panX = (window.innerWidth - 4400 * scale) / 2;
             let panY = 20;
 
+            let contentMinX = 250;   // measured from the real cards after layout
+            let userMoved = false;
             let rafPending = false;
             function updateTransform() {
                 if (rafPending) return;
@@ -882,7 +884,7 @@
             function resetView() {
                 if (isMobile()) {
                     scale = 0.35;
-                    panX = 10 - 400 * scale;
+                    panX = 12 - contentMinX * scale;   // start at the left-most card
                     panY = header.offsetHeight + 10;
                 } else {
                     scale = 0.65;
@@ -906,6 +908,7 @@
 
             viewport.addEventListener("pointerdown", (e) => {
                 if (e.target.closest("button") || e.target.closest("input")) return;
+                userMoved = true;
                 if (e.pointerType === "mouse" && e.target.closest(".tree-card")) return;
                 pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 if (pointers.size === 2) {
@@ -938,14 +941,15 @@
 
             viewport.addEventListener("wheel", (e) => {
                 e.preventDefault();
+                userMoved = true;
                 const rect = viewport.getBoundingClientRect();
                 zoomAt(e.clientX - rect.left, e.clientY - rect.top, scale * (e.deltaY < 0 ? 1.08 : 0.92));
             }, { passive: false });
 
             const cx = () => window.innerWidth / 2;
             const cy = () => (window.innerHeight + header.offsetHeight) / 2;
-            document.getElementById("zoom-in").addEventListener("click", () => zoomAt(cx(), cy(), scale * 1.25));
-            document.getElementById("zoom-out").addEventListener("click", () => zoomAt(cx(), cy(), scale / 1.25));
+            document.getElementById("zoom-in").addEventListener("click", () => { userMoved = true; zoomAt(cx(), cy(), scale * 1.25); });
+            document.getElementById("zoom-out").addEventListener("click", () => { userMoved = true; zoomAt(cx(), cy(), scale / 1.25); });
             document.getElementById("reset-view").addEventListener("click", resetView);
 
             function getNodeBox(id) {
@@ -966,6 +970,25 @@
                     left: (elRect.left - parentRect.left) / scale,
                     right: (elRect.right - parentRect.left) / scale
                 };
+            }
+
+            function fitCanvas() {
+                const pr = content.getBoundingClientRect();
+                let minX = Infinity, maxX = 0, maxY = 0;
+                document.querySelectorAll(".tree-card").forEach(el => {
+                    const r = el.getBoundingClientRect();
+                    minX = Math.min(minX, (r.left - pr.left) / scale);
+                    maxX = Math.max(maxX, (r.right - pr.left) / scale);
+                    maxY = Math.max(maxY, (r.bottom - pr.top) / scale);
+                });
+                if (!isFinite(minX) || maxX <= 0) return;
+                contentMinX = Math.max(0, minX - 30);
+                const w = Math.max(4400, Math.ceil(maxX + 300));
+                const h = Math.max(3200, Math.ceil(maxY + 300));
+                content.style.width = w + "px";
+                content.style.height = h + "px";
+                svgCanvas.setAttribute("width", w);
+                svgCanvas.setAttribute("height", h);
             }
 
             function drawPaths() {
@@ -1140,7 +1163,14 @@
                 drawLine('pair-kashyap-uma', 'node-samaira', 'far-fetched');
             }
 
-            setTimeout(drawPaths, 180);
+            function initLayout() {
+                fitCanvas();
+                if (!userMoved) resetView();
+                drawPaths();
+            }
+            setTimeout(initLayout, 250);
+            setTimeout(initLayout, 900);   // again after Tailwind/fonts finish
+            window.addEventListener("load", () => setTimeout(initLayout, 100));
             window.addEventListener("resize", drawPaths);
 
             // SEARCH FUNCTIONALITY
