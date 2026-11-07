@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rachayetria Universe - Master Family Lineage Tree</title>
-    <!-- Tailwind CSS via CDN (works instantly, shows a console warning only) -->
+    <!-- Tailwind CSS for modern utility layout -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -37,19 +37,7 @@
             user-select: none;
             overflow: hidden;
             height: 100vh;
-            height: 100dvh;
             width: 100vw;
-            overscroll-behavior: none;
-        }
-        #viewport-container { touch-action: none; }
-        #pan-zoom-content { transition: none !important; }
-
-        /* ---------- MOBILE ---------- */
-        @media (max-width: 767px) {
-            .brand-title { display: none; }
-            .main-title { font-size: 1rem; }
-            #zoom-in, #zoom-out, #reset-view { min-width: 36px; min-height: 36px; font-size: 14px; }
-            #search-input { font-size: 16px; } /* stops iOS zoom-on-focus */
         }
 
         #viewport-container {
@@ -142,17 +130,17 @@
 <body class="font-sans antialiased">
 
     <!-- TOP HEADER BAR -->
-    <header class="fixed top-0 left-0 right-0 z-50 ui-panel px-3 md:px-6 py-2 md:py-3 gap-y-2 flex flex-wrap items-center justify-between shadow-2xl border-b border-goldBorder/30">
+    <header class="fixed top-0 left-0 right-0 z-50 ui-panel px-6 py-3 flex flex-wrap items-center justify-between shadow-2xl border-b border-goldBorder/30">
         <div>
             <p class="brand-title text-xs tracking-widest text-goldText/70 uppercase">Rachayetria Universe</p>
             <h1 class="main-title font-cinzel text-xl md:text-2xl font-bold text-goldText tracking-wider">Master Lineage Tree</h1>
         </div>
 
         <!-- SEARCH BAR & LEGEND TOGGLES -->
-        <div class="flex items-center space-x-4 order-3 w-full md:w-auto md:order-none">
-            <div class="relative flex-1 md:flex-none">
+        <div class="flex items-center space-x-4 my-2 md:my-0">
+            <div class="relative">
                 <input type="text" id="search-input" placeholder="Search character..." 
-                    class="bg-obsidian/90 border border-goldBorder/40 rounded-full px-4 py-1.5 text-xs text-goldText focus:outline-none focus:border-goldBorder w-full md:w-64 transition-all">
+                    class="bg-obsidian/90 border border-goldBorder/40 rounded-full px-4 py-1.5 text-xs text-goldText focus:outline-none focus:border-goldBorder w-48 md:w-64 transition-all">
                 <button id="clear-search" class="absolute right-3 top-1.5 text-xs text-goldText/50 hover:text-goldText hidden">✕</button>
             </div>
 
@@ -861,95 +849,57 @@
             const content = document.getElementById("pan-zoom-content");
             const svgCanvas = document.getElementById("svg-canvas");
 
-            const header = document.querySelector("header");
-            const isMobile = () => window.innerWidth < 768;
-            const MIN_SCALE = 0.12, MAX_SCALE = 1.8;
-            let scale, panX, panY;
-
-            function resetView() {
-                const top = header.offsetHeight + 10;
-                if (isMobile()) {
-                    scale = 0.35;
-                    panX = 10 - 400 * scale;      // start at the first family cluster
-                    panY = top;
-                } else {
-                    scale = 0.65;
-                    panX = (window.innerWidth - 4400 * scale) / 2;
-                    panY = 20;
-                }
-                updateTransform();
-            }
+            let scale = 0.65;
+            let panX = (window.innerWidth - 4400 * scale) / 2;
+            let panY = 20;
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
 
             function updateTransform() {
                 content.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
             }
+            updateTransform();
 
-            function zoomAt(cx, cy, newScale) {
-                newScale = Math.min(Math.max(MIN_SCALE, newScale), MAX_SCALE);
-                panX = cx - (cx - panX) * (newScale / scale);
-                panY = cy - (cy - panY) * (newScale / scale);
-                scale = newScale;
+            viewport.addEventListener("mousedown", (e) => {
+                if (e.target.closest(".tree-card") || e.target.closest("button") || e.target.closest("input")) return;
+                isDragging = true;
+                startX = e.clientX - panX;
+                startY = e.clientY - panY;
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                panX = e.clientX - startX;
+                panY = e.clientY - startY;
                 updateTransform();
-            }
-
-            // ---- Pointer events: mouse drag, touch drag, two-finger pinch ----
-            const pointers = new Map();
-            let lastPinchDist = 0;
-
-            viewport.addEventListener("pointerdown", (e) => {
-                if (e.target.closest("button") || e.target.closest("input")) return;
-                // mouse: don't start a drag on a card; touch: allow drag anywhere
-                if (e.pointerType === "mouse" && e.target.closest(".tree-card")) return;
-                pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                viewport.setPointerCapture(e.pointerId);
-                if (pointers.size === 2) {
-                    const [p1, p2] = [...pointers.values()];
-                    lastPinchDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                }
             });
 
-            viewport.addEventListener("pointermove", (e) => {
-                const prev = pointers.get(e.pointerId);
-                if (!prev) return;
-                const cur = { x: e.clientX, y: e.clientY };
-
-                if (pointers.size === 1) {
-                    panX += cur.x - prev.x;
-                    panY += cur.y - prev.y;
-                    pointers.set(e.pointerId, cur);
-                    updateTransform();
-                } else if (pointers.size === 2) {
-                    pointers.set(e.pointerId, cur);
-                    const [p1, p2] = [...pointers.values()];
-                    const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                    if (lastPinchDist > 0) {
-                        zoomAt((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, scale * (dist / lastPinchDist));
-                    }
-                    lastPinchDist = dist;
-                }
-            });
-
-            const endPointer = (e) => {
-                pointers.delete(e.pointerId);
-                lastPinchDist = 0;
-                // if one finger remains after a pinch, continue panning from its position
-            };
-            viewport.addEventListener("pointerup", endPointer);
-            viewport.addEventListener("pointercancel", endPointer);
+            window.addEventListener("mouseup", () => { isDragging = false; });
 
             viewport.addEventListener("wheel", (e) => {
                 e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+                const newScale = Math.min(Math.max(0.25, scale * zoomFactor), 1.8);
+                
                 const rect = viewport.getBoundingClientRect();
-                zoomAt(e.clientX - rect.left, e.clientY - rect.top, scale * (e.deltaY < 0 ? 1.08 : 0.92));
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                panX = mouseX - (mouseX - panX) * (newScale / scale);
+                panY = mouseY - (mouseY - panY) * (newScale / scale);
+                scale = newScale;
+                updateTransform();
             }, { passive: false });
 
-            resetView();
-
-            const centerX = () => window.innerWidth / 2;
-            const centerY = () => (window.innerHeight + header.offsetHeight) / 2;
-            document.getElementById("zoom-in").addEventListener("click", () => zoomAt(centerX(), centerY(), scale * 1.25));
-            document.getElementById("zoom-out").addEventListener("click", () => zoomAt(centerX(), centerY(), scale / 1.25));
-            document.getElementById("reset-view").addEventListener("click", resetView);
+            document.getElementById("zoom-in").addEventListener("click", () => { scale = Math.min(1.8, scale * 1.15); updateTransform(); });
+            document.getElementById("zoom-out").addEventListener("click", () => { scale = Math.max(0.25, scale / 1.15); updateTransform(); });
+            document.getElementById("reset-view").addEventListener("click", () => {
+                scale = 0.65;
+                panX = (window.innerWidth - 4400 * scale) / 2;
+                panY = 20;
+                updateTransform();
+            });
 
             function getNodeBox(id) {
                 const el = document.getElementById(id);
