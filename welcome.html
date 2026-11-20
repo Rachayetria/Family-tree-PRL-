@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Rachayetria character are you?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07040d;
+  --bg2: #130a1c;
+  --bg3: #1c1030;
+  --gold: #d4af37;
+  --gold2: #f3e5ab;
+  --soft: #f3e5ab;
+  --vio: #8a63be;
+  --wine: #3a1030;
+  --fg: #e6e1f0;
+  --mu: #a094b0;
+  --ln: rgba(212,175,55,.24);
+  --shadow: 0 4px 32px rgba(0,0,0,.7);
+  --hd: 'Cinzel', Georgia, serif;
+  --sf: 'Cormorant Garamond', Georgia, serif;
+  --ui: 'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: radial-gradient(ellipse at 50% -5%, #2a1248 0, #12081f 38%, var(--bg) 75%) fixed;
+  color: var(--fg);
+  font-family: var(--sf);
+  font-size: 17px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page {
+  width: 100%;
+  max-width: 640px;
+  padding: 0 20px 60px;
+}
+
+@media (min-width: 880px) {
+  .page { max-width: 760px; }
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    top: 12%;
+    bottom: 12%;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--ln) 15%, var(--ln) 85%, transparent);
+    pointer-events: none;
+  }
+  body::before { left: calc(50% - 440px); }
+  body::after  { right: calc(50% - 440px); }
+}
+
+/* ── Header ── */
+.site-header {
+  width: 100%;
+  text-align: center;
+  padding: 32px 20px 24px;
+  border-bottom: 1px solid var(--ln);
+  margin-bottom: 36px;
+}
+.site-header .label {
+  font-family: var(--ui);
+  font-size: .72rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.site-header h1 {
+  font-family: var(--hd);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 5vw, 2.1rem);
+  color: var(--gold2);
+  line-height: 1.3;
+  margin-bottom: 10px;
+  letter-spacing: .01em;
+}
+.site-header p {
+  font-size: 1.05rem;
+  color: var(--mu);
+  font-style: italic;
+}
+
+/* ── Progress ── */
+.prog-bar {
+  height: 3px;
+  background: var(--ln);
+  border-radius: 2px;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width .4s ease;
+}
+
+/* ── Question card ── */
+.q-card {
+  background: linear-gradient(180deg, rgba(28,16,48,.9), rgba(19,10,28,.9));
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow), inset 0 0 0 4px var(--bg), inset 0 0 0 5px var(--ln);
+}
+.q-num {
+  font-family: var(--ui);
+  font-size: .72rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+.q-text {
+  font-family: var(--hd);
+  font-size: 1.2rem;
+  color: var(--fg);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.opts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.opt {
+  background: rgba(7,4,13,.6);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  padding: 14px 18px;
+  color: var(--fg);
+  font-family: var(--sf);
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, transform .1s;
+  line-height: 1.4;
+}
+.opt:hover { border-color: var(--gold); background: rgba(138,99,190,.14); }
+.opt:active { transform: scale(.98); }
+.opt.selected { border-color: var(--gold); background: rgba(212,175,55,.14); color: var(--gold2); }
+
+.q-nav {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-start;
+}
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--ln);
+  border-radius: 99px;
+  padding: 8px 18px;
+  color: var(--mu);
+  font-family: var(--ui);
+  font-size: .8rem;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.back-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold2);
+  background: rgba(212,175,55,.08);
+}
+
+/* ── Result card ── */
+.result { display: none; }
+.result.show { display: block; }
+
+.res-header {
+  background: linear-gradient(180deg, rgba(28,16,48,.9), rgba(19,10,28,.9));
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  padding: 32px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow), inset 0 0 0 4px var(--bg), inset 0 0 0 5px var(--ln);
+}
+.res-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--hd);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 auto 20px;
+  background: var(--bg3);
+  overflow: hidden;
+  box-shadow: 0 0 24px rgba(212,175,55,.18);
+}
+.res-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.res-you {
+  font-family: var(--ui);
+  font-size: .72rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.res-name {
+  font-family: var(--hd);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--gold2);
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.res-fam {
+  color: var(--mu);
+  font-style: italic;
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+.res-role {
+  color: var(--soft);
+  font-size: 1.05rem;
+  margin-bottom: 18px;
+  line-height: 1.5;
+  font-style: italic;
+}
+.res-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+.trait-chip {
+  background: rgba(7,4,13,.6);
+  border: 1px solid var(--ln);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-family: var(--ui);
+  font-size: .78rem;
+  color: var(--gold);
+}
+
+.res-why {
+  background: rgba(7,4,13,.55);
+  border: 1px solid var(--ln);
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 16px 18px;
+  text-align: left;
+}
+.res-why-title {
+  font-family: var(--ui);
+  font-size: .75rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.res-why p {
+  font-family: var(--sf);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--fg);
+  margin-bottom: 8px;
+}
+.res-why p:last-child {
+  margin-bottom: 0;
+  color: var(--mu);
+  font-style: italic;
+  font-size: .96rem;
+}
+
+.res-also {
+  background: linear-gradient(180deg, rgba(28,16,48,.9), rgba(19,10,28,.9));
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  padding: 22px 20px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 0 0 4px var(--bg), inset 0 0 0 5px var(--ln);
+}
+.res-also h3 {
+  font-family: var(--ui);
+  font-size: .85rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mu);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.also-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.also-card {
+  background: rgba(7,4,13,.6);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.also-ava {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--hd);
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 auto 8px;
+  background: var(--bg2);
+  border: 1px solid var(--ln);
+  overflow: hidden;
+  font-size: 1.1rem;
+}
+.also-ava img { width:100%;height:100%;object-fit:cover; }
+.also-name { font-size: .92rem; color: var(--soft); }
+.also-fam { font-family: var(--ui); font-size: .74rem; color: var(--mu); margin-top: 4px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-block;
+  padding: 12px 28px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: 99px;
+  color: var(--soft);
+  font-family: var(--ui);
+  font-weight: 500;
+  font-size: .92rem;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  text-decoration: none;
+}
+.btn:hover { background: var(--gold); color: #1a1020; }
+.btn.primary { background: var(--gold); color: #1a1020; }
+.btn.primary:hover { background: var(--gold2); }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+
+/* ── Share panel ── */
+.share-box {
+  background: linear-gradient(180deg, rgba(28,16,48,.9), rgba(19,10,28,.9));
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: inset 0 0 0 4px var(--bg), inset 0 0 0 5px var(--ln);
+}
+.share-box h3 {
+  font-family: var(--ui);
+  font-size: .85rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mu);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.card-preview-wrap {
+  margin: 0 auto 18px;
+  max-width: 360px;
+}
+.card-preview {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(212,175,55,.45);
+  display: block;
+  box-shadow: 0 12px 32px rgba(0,0,0,.65);
+  background: #0d0617;
+}
+.card-status {
+  font-family: var(--ui);
+  font-size: .76rem;
+  color: var(--mu);
+  margin-top: 8px;
+}
+.share-text {
+  background: rgba(7,4,13,.6);
+  border: 1px solid var(--ln);
+  border-radius: 8px;
+  padding: 14px;
+  font-size: .92rem;
+  color: var(--soft);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  font-style: italic;
+  text-align: left;
+  white-space: pre-line;
+}
+.copy-msg { font-family: var(--ui); font-size: .8rem; color: var(--mu); margin-top: 10px; min-height: 18px; }
+
+/* ── Footer ── */
+.site-footer {
+  margin-top: 40px;
+  text-align: center;
+  padding: 24px 20px;
+  border-top: 1px solid var(--ln);
+  width: 100%;
+}
+.site-footer p { font-family: var(--ui); font-size: .8rem; color: var(--mu); }
+
+/* ── Quiz container hidden when result shown ── */
+#quiz-section.hide { display: none; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="label">Rachayetria Universe</div>
+  <h1>Which character are you?</h1>
+  <p>Answer thirteen questions and find out who you are in the universe.</p>
+</header>
+
+<main class="page">
+
+  <!-- Quiz -->
+  <section id="quiz-section">
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div class="q-card" id="q-card">
+      <!-- Filled by JS -->
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section class="result" id="result-section">
+    <div class="res-header">
+      <div class="res-avatar" id="res-ava">?</div>
+      <div class="res-you">You are</div>
+      <div class="res-name" id="res-name"></div>
+      <div class="res-fam" id="res-fam"></div>
+      <div class="res-role" id="res-role"></div>
+      <div class="res-traits" id="res-traits"></div>
+
+      <div class="res-why" id="res-why">
+        <div class="res-why-title">Why you got this character</div>
+        <p id="res-why-main"></p>
+        <p id="res-why-match"></p>
+      </div>
+    </div>
+
+    <div class="res-also" id="res-also">
+      <h3>Also close to you</h3>
+      <div class="also-grid" id="also-grid"></div>
+    </div>
+
+    <div class="share-box">
+      <h3>Your character card &amp; share</h3>
+      <canvas id="card-canvas" width="1080" height="1560" style="display:none"></canvas>
+      <div class="card-preview-wrap">
+        <img id="card-preview" class="card-preview" alt="Your character card">
+        <div class="card-status" id="card-status">Preparing your character card...</div>
+      </div>
+      <div class="share-text" id="share-text"></div>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn primary" id="share-btn" onclick="shareToFriends()">Share with friends</button>
+        <button class="btn" id="download-btn" onclick="downloadCard()">Download image</button>
+        <button class="btn" onclick="copyResult()">Copy text</button>
+      </div>
+      <div class="copy-msg" id="copy-msg"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="restart()">Take it again</button>
+      <a class="btn" id="read-link" href="#" target="_blank">Read the books</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>All stories and characters belong to the author of the Rachayetria Universe.</p>
+</footer>
+
+<script>
+// ── CONFIG ── edit this one line ────────────────────────────────────────────
+var READ_URL = 'https://www.wattpad.com/user/YOUR_WATTPAD';   // your Wattpad
+// ────────────────────────────────────────────────────────────────────────────
+
+document.getElementById('read-link').href = READ_URL;
+
+// ── Character data (56 active characters after requested exclusions) ──
+var CHARS = [
+  {"id": "ADH-03", "name": "Prithviraj", "g": "M", "fam": "Adhvaryu", "role": "Narsimha and Manorama's elder son", "traits": "guilty, humble, protective", "strength": "hosts with honesty and care", "flaw": "carries guilt, poor at formal talk", "code": "Eye for an eye; repaying debts", "bk": 6},
+  {"id": "ADH-04", "name": "Dheerviraj", "g": "M", "fam": "Adhvaryu", "role": "Narsimha and Manorama's younger son", "traits": "quiet, withdrawn", "strength": "loyal to Moha; never disrespects women with his eyes", "flaw": "explosive temper; dislikes crying women", "code": "never disrespects a woman with his eyes", "bk": 5},
+  {"id": "AGH-01", "name": "Daiwik Muktam Agnihotri", "g": "M", "fam": "Agnihotri", "role": "male lead", "traits": "loyal, protective, possessive, volatile", "strength": "fierce loyalty; devotion to family", "flaw": "rage episodes, deception, possessiveness", "code": "loyalty comes before everything (his stated creed)", "bk": 15},
+  {"id": "AGH-02", "name": "Devakshaya Agnihotri (Dev)", "g": "M", "fam": "Agnihotri", "role": "love interest", "traits": "protective, defiant, clever with maths, self-mocking", "strength": "fighting, reading people, holding his ground", "flaw": "violence, impulsiveness, cruel humour, hides his conscience", "code": "The 50 earned with dignity feels greater than 500 earned with immorality.'", "bk": 3},
+  {"id": "AGH-03", "name": "Divya (Divyanshika) Agnihotri", "g": "F", "fam": "Agnihotri", "role": "Daiwik's sister (Divyanshika)", "traits": "cheerful, curious", "strength": "warmth", "flaw": "", "code": "", "bk": 3},
+  {"id": "AGH-06", "name": "Raagyata Agnihotri", "g": "F", "fam": "Agnihotri", "role": "Zehra and Daiwik's elder daughter", "traits": "cheeky", "strength": "Perfect pitch", "flaw": "", "code": "", "bk": 5},
+  {"id": "AGH-07", "name": "Azariah (Aza)", "g": "F", "fam": "Agnihotri", "role": "Zehra and Daiwik's younger daughter", "traits": "Warm, cheeky, loyal", "strength": "", "flaw": "", "code": "", "bk": 7},
+  {"id": "AGN-02", "name": "Gauravya Agnivanshi", "g": "M", "fam": "Agnivanshi", "role": "Younger Agnivanshi brother", "traits": "Controlling, calculating, possessive", "strength": "Patience; planning", "flaw": "Envy of his elder brother; entitlement", "code": "Family loyalty gives way to ambition", "bk": 3},
+  {"id": "AGN-05", "name": "Aadheesh Agnivanshi", "g": "M", "fam": "Agnivanshi", "role": "Jaipriya's son", "traits": "Charming, affectionate", "strength": "decisive; defends the weak in the end", "flaw": "violent, possessive, cruel early", "code": "Keeps his word; resents being used", "bk": 8},
+  {"id": "AGN-06", "name": "Abhiraj Agnivanshi (Babasaheb)", "g": "M", "fam": "Agnivanshi", "role": "politician", "traits": "Ruthless, possessive, protective, calculating, secretly tender", "strength": "political network and power; quick to act with a gun", "flaw": "pride and anger; forces women into compliance", "code": "Protects what is his; hates women being harmed, yet acts violently", "bk": 20},
+  {"id": "AGN-08", "name": "Aragya", "g": "M", "fam": "Agnivanshi", "role": "Taara and Abhiraj's elder twin", "traits": "Entitled to the family inheritance", "strength": "Riding", "flaw": "Violent", "code": "Will not become a rapist or a weak person enslaved to love", "bk": 10},
+  {"id": "AGN-09", "name": "Tamanna", "g": "F", "fam": "Agnivanshi", "role": "Taara and Abhiraj's twin daughter.", "traits": "reserved", "strength": "Quick wit", "flaw": "", "code": "", "bk": 11},
+  {"id": "AGN-10", "name": "Devrat Agnivanshi", "g": "M", "fam": "Agnivanshi", "role": "Taara and Abhiraj's third child", "traits": "Quiet, loyal, resentful of unfairness", "strength": "Calm under pressure", "flaw": "Drinking to escape", "code": "Duty to the promise he gave", "bk": 8},
+  {"id": "AGN-11", "name": "Harshvardhan Agnivanshi (Vardhan)", "g": "M", "fam": "Agnivanshi", "role": "Idhanth's older brother, lives in India, works in uncle Abhiraj's building", "traits": "Controlling, proud, quick to rage, protective of family image", "strength": "Business sense; intelligence", "flaw": "Rage and need to win", "code": "Life without dignity is a life lived in vain", "bk": 8},
+  {"id": "AGN-12", "name": "Idhanth Agnivanshi", "g": "M", "fam": "Agnivanshi", "role": "POV hero, cousin of Aragya, son of Aadheesh Agnivanshi (named in Forced Vows)", "traits": "Playful, bored, vain, observant", "strength": "Notices small things", "flaw": "Arrogant, disrespectful", "code": "", "bk": 6},
+  {"id": "AGN-13", "name": "Mannat Aadheesh Agnivanshi", "g": "F", "fam": "Agnivanshi", "role": "Adopted daughter of Aadheesh and Aamira.", "traits": "Spirited, emotional, defiant, funny", "strength": "Academically driven; she earned Harvard admission on her own", "flaw": "Reckless with her online presence", "code": "", "bk": 2},
+  {"id": "ALI-01", "name": "Rehman Ali (Baba; Baba Ali)", "g": "M", "fam": "Ali", "role": "antagonist", "traits": "abusive, greedy, controlling", "strength": "political network and his daughters' value", "flaw": "greed; violence", "code": "None stated", "bk": 9},
+  {"id": "BKS-01", "name": "Saubhagya Bakshi (Sau)", "g": "M", "fam": "Bakshi", "role": "Bakshi family member", "traits": "Charming, loyal to Muqda, cunning", "strength": "Connections", "flaw": "Possessiveness", "code": "", "bk": 4},
+  {"id": "BKS-02", "name": "Inara Bakshi", "g": "F", "fam": "Bakshi", "role": "protagonist", "traits": "perceptive, theatrical, calculating, reads people; uses sex appeal as armor", "strength": "reads people; survives; strong under pressure", "flaw": "hides fear behind performance; drug dependence; manipulative", "code": "", "bk": 3},
+  {"id": "BHT-01", "name": "Yogyati Bhati", "g": "F", "fam": "Bhati", "role": "Female lead", "traits": "Stubborn, sharp-tongued, strong, dedicated to study and work", "strength": "Skilled nurse; works long shifts; survived alone in Kota", "flaw": "Pride; hides hurt behind anger", "code": "", "bk": 2},
+  {"id": "CHH-02", "name": "Jheel", "g": "F", "fam": "Chauhan", "role": "suitor rejected by Ekvarthya", "traits": "Glamorous, sensitive, ambitious", "strength": "Charm", "flaw": "Betrayed Manyata for love", "code": "Guilt-driven: believes she must bear the consequences of her own betrayals", "bk": 3},
+  {"id": "DWR-01", "name": "Vidyut Daiwar", "g": "M", "fam": "Daiwar", "role": "Royal patron and employer", "traits": "Controlling; possessive of his sister", "strength": "Wealth and royal connections", "flaw": "Distrustful; over-possessive", "code": "Loyalty to family; protecting his sister at any cost", "bk": 10},
+  {"id": "DWR-02", "name": "Manyata (Mannu) Daiwar", "g": "F", "fam": "Daiwar", "role": "Vidyut's sister", "traits": "Sharp, honest, teasing", "strength": "keeps hosting duty", "flaw": "Bottles up feelings until they burst; impulsive", "code": "a host must leave guests well fed; a wife must speak", "bk": 6},
+  {"id": "DWR-07", "name": "Vidhan Daiwar", "g": "M", "fam": "Daiwar", "role": "Vidyut and Sarisha's son", "traits": "Energetic, playful", "strength": "", "flaw": "", "code": "", "bk": 3},
+  {"id": "DHA-01", "name": "Dasharth Swaraj Dharan", "g": "M", "fam": "Dharan", "role": "POV hero, heir in the Dharan business who runs Lakeside Hotel", "traits": "Charming, impulsive, protective of family", "strength": "Management skills, loyalty to Kehr", "flaw": "Obsession, possessiveness", "code": "Will not be a murderer or drug dealer", "bk": 2},
+  {"id": "DHA-04", "name": "Svojasvan Dharan", "g": "M", "fam": "Dharan", "role": "Eldest Dharan brother, lives abroad, the man behind the empire", "traits": "Violent, possessive, obsessed with aghori rituals", "strength": "Speed and violence; intimidating presence", "flaw": "Violence and his belief in a sacrifice curse", "code": "Says he is protecting his family from the curse", "bk": 2},
+  {"id": "HSN-01", "name": "Zehra Mohammad Hassan (later Zehra Agnihotri)", "g": "F", "fam": "Hassan", "role": "Daiwik's lost love", "traits": "resilient, observant, forgiving, guarded", "strength": "endurance; caring for family", "flaw": "self-blame; hides her needs; takes money in secret", "code": "", "bk": 14},
+  {"id": "KNS-01", "name": "Jinitya Kansal (also called Jyoshna)", "g": "F", "fam": "Kansal", "role": "Waits outside hospital room with the brothers", "traits": "resilient, endures, self-loathing, perceptive", "strength": "endurance, protective mother, survivor", "flaw": "self-loathing, hides her face", "code": "", "bk": 9},
+  {"id": "KNS-02", "name": "Naresh Kansal", "g": "M", "fam": "Kansal", "role": "neighbour", "traits": "cruel, possessive, abusive", "strength": "wealth and land control", "flaw": "drunken violence", "code": "", "bk": 3},
+  {"id": "KNS-04", "name": "Aayatee", "g": "F", "fam": "Kansal", "role": "daughter of Jinitya", "traits": "Hostile, playful", "strength": "Strong self-defence skills", "flaw": "Jealous and hostile", "code": "", "bk": 8},
+  {"id": "RJN-01", "name": "Aamira (Rajshri)", "g": "F", "fam": "Raajnandan", "role": "Real name Rajshri", "traits": "Kind, sweet, emotionally dependent, secretly sharp", "strength": "loyal to Muqda; quick to ask for help", "flaw": "passive; goes along with orders; jealous of Muqda", "code": "Loyal to her sister; hates violence yet yields", "bk": 10},
+  {"id": "RJD-03", "name": "Joshil Rajadi", "g": "M", "fam": "Rajadi", "role": "Antagonist of the Vicious Bet", "traits": "Prideful, vengeful", "strength": "controls the factory and the glass deals", "flaw": "Jealous of his sister's standing", "code": "Honour above family", "bk": 4},
+  {"id": "RAJ-01", "name": "Shanidha (Shani)", "g": "F", "fam": "Rajadi", "role": "Dheer Kaka's wife (likely)", "traits": "bold, stubborn, forward, dreams of being a wife", "strength": "speaks up to power; clever with words", "flaw": "impulsive; says every intrusive thought aloud", "code": "insists on respect and dignity", "bk": 5},
+  {"id": "RJP-03", "name": "Jasvanthya Purshottam Kumar Rajput", "g": "M", "fam": "Rajput", "role": "Hero, POV narrator", "traits": "Composed, intelligent, wise, protective, quick to temper when crossed", "strength": "Intellect, business skill, loyalty to family", "flaw": "Miscommunication, rage, drinking, secrecy about his visits", "code": "Will not weigh a human on a deal; will not allow women to be bartered", "bk": 12},
+  {"id": "RJP-04", "name": "Daharthya Rajput", "g": "M", "fam": "Rajput", "role": "King of Vardhgarh", "traits": "arrogant, dominating, cunning, bold, fiercely proud, brutal in past", "strength": "chess, sword fighting, combat", "flaw": "treats people as bets and assets; obsession with winning", "code": "A Rajput never begs (Ek Rajput kabhi bheek nahi maangta)", "bk": 11},
+  {"id": "RJP-05", "name": "Ahilya Rajadi (later Ahilya Daharthya Rajput)", "g": "F", "fam": "Rajput", "role": "Heroine", "traits": "proud, defiant, bold, intelligent, strategic", "strength": "chess, sword, outspoken command", "flaw": "pride; stubbornness; grudge against father", "code": "Consent is required; refuses to be owned by any man", "bk": 11},
+  {"id": "RJP-06", "name": "Ekvarthya Purshottam Kumar Rajput", "g": "M", "fam": "Rajput", "role": "Second brother, in line behind Daharthya", "traits": "Perceptive, wry, cruel with his jokes, never considered marriage", "strength": "protects women and brothers, loyal to family", "flaw": "violent impulses, self-description as devil", "code": "punishes men who harm women with violence", "bk": 11},
+  {"id": "RJP-07", "name": "Raajvanshya", "g": "M", "fam": "Rajput", "role": "Named heir reference", "traits": "playful, cheeky", "strength": "Physical", "flaw": "Violent temper", "code": "Sovereignty by birthright and destiny", "bk": 10},
+  {"id": "RJP-08", "name": "Abhyananta (Abhya)", "g": "F", "fam": "Rajput", "role": "Daughter born in the final chapter", "traits": "delicate and feminine (as her parents describe her)", "strength": "Aura and elegance", "flaw": "", "code": "", "bk": 9},
+  {"id": "RJP-09", "name": "Dharyana (Daira) Rajput", "g": "F", "fam": "Rajput", "role": "Daughter of Daharthya and Ahilya", "traits": "Bold, warm, direct", "strength": "Persistent", "flaw": "Holds a grudge", "code": "", "bk": 5},
+  {"id": "RJP-10", "name": "Eklavya Jasvanthya Rajput", "g": "M", "fam": "Rajput", "role": "Friend and chess partner of Raajvanshya, brother of Abhyananta", "traits": "arrogant, sardonic, obsessive, possessive, quick to rage", "strength": "quick wit; public speaking", "flaw": "uses force and humiliation against Antara; cannot handle being challenged", "code": "Keeps the family's deal not to look at each other's sisters", "bk": 5},
+  {"id": "RJP-16", "name": "Raajvanshya", "g": "M", "fam": "Rajput", "role": "Daharthya and Ahilya's son", "traits": "Playful", "strength": "", "flaw": "", "code": "", "bk": 2},
+  {"id": "RTH-04", "name": "Samaira Rathore", "g": "F", "fam": "Rathore", "role": "Heroine, POV narrator", "traits": "Guarded, proud, musical, outwardly dutiful, secretly furious", "strength": "Fierce with words, self-possessed, perceptive", "flaw": "Pride, distrust, vengeful streak (author notes this)", "code": "Refuses to be bartered; will not stoop low", "bk": 14},
+  {"id": "RTH-05", "name": "Somvarth (Kunwar Rathore)", "g": "M", "fam": "Rathore", "role": "Samaira's brother", "traits": "Protective of Samaira; dutiful to father", "strength": "Protective of his sister", "flaw": "Accepts his father's authority", "code": "Kingship through strength and calculation; family honour", "bk": 5},
+  {"id": "SAH-01", "name": "Nirnay Sahu", "g": "M", "fam": "Sahu", "role": "Male lead", "traits": "Protective, responsible, self-sacrificing elder son", "strength": "Cooks, works and carries the family alone", "flaw": "Hot-tempered; hides his struggles behind lies", "code": "", "bk": 3},
+  {"id": "EXT-117", "name": "Jivan Desai", "g": "M", "fam": "Other characters", "role": "love interest", "traits": "Loyal, principled, protective, guilt-ridden, quietly tender", "strength": "Combat skill; moral awakening; steady presence in crisis", "flaw": "Blind loyalty to Prithviraj; complicity in kidnappings; guilt", "code": "Will not harm the innocent; defies orders to save victims; says no crime justifies suicide", "bk": 3},
+  {"id": "EXT-18", "name": "Nazma", "g": "F", "fam": "Other characters", "role": "brothel woman", "traits": "caring, practical", "strength": "helps Muqda", "flaw": "Self-sacrifice that leads her into danger", "code": "Family first; keeps her word", "bk": 4},
+  {"id": "EXT-20", "name": "Aahil", "g": "M", "fam": "Other characters", "role": "friend and loyal helper to Muqda", "traits": "loyal, emotional, impulsive", "strength": "protects Muqda", "flaw": "blurts feelings", "code": "Protects his friends", "bk": 6},
+  {"id": "EXT-21", "name": "Sukriti", "g": "F", "fam": "Other characters", "role": "Brothel woman", "traits": "guarded", "strength": "Endurance and nerve", "flaw": "Grudges; pride", "code": "Loyalty; refuses to be pitied", "bk": 6},
+  {"id": "EXT-22", "name": "Shala", "g": "F", "fam": "Other characters", "role": "Brothel woman", "traits": "Warm, playful", "strength": "Endurance; loyalty to family", "flaw": "Fatalism and self-blame; accepts abuse as her lot", "code": "Accepts fate but protects others; honours her sister", "bk": 4},
+  {"id": "EXT-37", "name": "Eraya", "g": "F", "fam": "Other characters", "role": "daughter of Inara and Dev", "traits": "Perfect, polite, witty", "strength": "Mathematics", "flaw": "Shivers at violence", "code": "", "bk": 6},
+  {"id": "EXT-38", "name": "Tejveer", "g": "M", "fam": "Other characters", "role": "son of Inara and Dev", "traits": "defensive", "strength": "physical power; fierce loyalty", "flaw": "explosive rage; violent impulses", "code": "family first; fate is preordained and cannot be reversed", "bk": 3},
+  {"id": "EXT-51", "name": "Sarisha", "g": "F", "fam": "Other characters", "role": "Zehra's friend", "traits": "frank, lonely", "strength": "Wit, courage, devotion to family and sister", "flaw": "Sharp tongue, pride, impulsive", "code": "Loyal to family; will not cheat on her husband", "bk": 6},
+  {"id": "EXT-62", "name": "Chandani", "g": "F", "fam": "Other characters", "role": "New girl in the haveli", "traits": "Resentful, determined, brave in the end", "strength": "Endurance; takes control of her revenge", "flaw": "Self-blame; lashes out", "code": "Hate is for the men who did it", "bk": 3},
+  {"id": "EXT-86", "name": "Magandha (Kakitai; childhood name Munni)", "g": "F", "fam": "Other characters", "role": "Sukriti and Shala's mother", "traits": "Resilient, witty, honest, protective of other women", "strength": "Survival knowledge; sharp observation", "flaw": "Self-doubt about her dark skin; envy of Vritra", "code": "Refuses to let children be disrespected", "bk": 2},
+  {"id": "AGN-22", "name": "Taara Agnivanshi", "g": "F", "fam": "Agnivanshi", "role": "Lead of Given As Gift. Real name Taara", "traits": "Fierce, protective, defiant, strategic, self-sacrificing", "strength": "fights for Aamira; refuses to show pain", "flaw": "Impulsive plotting; pride; deceit", "code": "promise to her mother to protect Aamira", "bk": 16}
+];
+
+// ── Quiz questions ──
+var QUESTIONS = [
+  {
+    text: "What drives you most?",
+    opts: [
+      { label: "Loyalty to the people I love",         keys: ["loyal","devot","faithful","never betray"] },
+      { label: "Freedom and independence",              keys: ["independ","free","rebel","defian","untamed"] },
+      { label: "Power, control and ambition",           keys: ["power","ambiti","ruthless","command","calculat"], gl: "M" },
+      { label: "Protecting my family at any cost",      keys: ["protect","family","sacrific","care","honour"] }
+    ]
+  },
+  {
+    text: "When you are hurt, you:",
+    opts: [
+      { label: "Go quiet and carry it alone",           keys: ["withdrawn","cold","guarded","secret","silent"] },
+      { label: "Burn with rage and make them pay",      keys: ["rage","anger","temper","violent","impuls","revenge"], gl: "M" },
+      { label: "Forgive, but never really forget",      keys: ["guilt","haunt","patient","kind","gentle"], gl: "F" },
+      { label: "Use it as fuel to get stronger",        keys: ["strate","clever","surviv","resilient","adapt"] }
+    ]
+  },
+  {
+    text: "Your greatest weakness is:",
+    opts: [
+      { label: "Pride — you refuse to bend",           keys: ["proud","arrog","stubborn","rigid","never surrender"], gl: "M" },
+      { label: "Possessiveness — you hold too tight",  keys: ["possess","jealous","control","obsess"], gl: "M" },
+      { label: "Guilt — you can't forgive yourself",   keys: ["guilt","self-","haunt","shame","regret"] },
+      { label: "Trust — you give it too fast or never",keys: ["distrust","naive","betray","too open","wary of trust"], gl: "F" }
+    ]
+  },
+  {
+    text: "In a crisis, your instinct is to:",
+    opts: [
+      { label: "Take charge — someone has to lead",     keys: ["leader","command","decisive","control","strategic"], gl: "M" },
+      { label: "Protect the people behind you",         keys: ["protect","shield","guard","sacrific","family first"] },
+      { label: "Find the quiet angle no one else sees", keys: ["clever","patient","strateg","observ","watch","plan"], gl: "F" },
+      { label: "Fight your way through it, full force", keys: ["fierce","bold","brave","fight","warrior","battle"], gl: "M" }
+    ]
+  },
+  {
+    text: "What do you secretly want most?",
+    opts: [
+      { label: "To be truly known — not just needed",   keys: ["love","known","understood","seen","accepted"], gl: "F" },
+      { label: "Respect you haven't had to beg for",    keys: ["respect","honour","recog","legit","status"], gl: "M" },
+      { label: "Peace — a life that isn't a war",       keys: ["peace","quiet","safe","home","simple","settled"] },
+      { label: "To win — completely and finally",       keys: ["win","victory","justice","revenge","prevail"], gl: "M" }
+    ]
+  },
+  {
+    text: "Your idea of love is:",
+    opts: [
+      { label: "Fierce and consuming — all or nothing", keys: ["possess","devot","obsess","claim","intens"], gl: "M" },
+      { label: "Patient — built slowly, through trust",  keys: ["patient","quiet","steady","gentle","trust"], gl: "F" },
+      { label: "Earned — you don't give it easily",      keys: ["guarded","wary","distrust","cold","hard to"] },
+      { label: "Sacrificial — you give before you take", keys: ["sacrific","selfless","care","gave up","for her","for him"], gl: "F" }
+    ]
+  },
+  {
+    text: "In an argument, you are the one who:",
+    opts: [
+      { label: "Says the cutting thing you can't take back", keys: ["sharp","cutting","blunt","insult","temper"] },
+      { label: "Goes cold and shuts the door",               keys: ["cold","withdrawn","silent","distant","shut"] },
+      { label: "Fights to be understood, not to win",        keys: ["understood","explain","plead","emotional","hurt"], gl: "F" },
+      { label: "Wins — because you always do",                keys: ["win","command","dominant","control","ruthless"], gl: "M" }
+    ]
+  },
+  {
+    text: "People who know you would call you:",
+    opts: [
+      { label: "Dangerous, if you need to be",          keys: ["dangerous","fierce","ruthless","feared","lethal"], gl: "M" },
+      { label: "The strong one everyone leans on",      keys: ["strength","strong","pillar","depend","hold"] },
+      { label: "The one who sees what others miss",     keys: ["clever","perceptive","observant","sharp mind","intuit"] },
+      { label: "Soft, until you're pushed too far",      keys: ["gentle","kind","soft","sweet","caring"], gl: "F" }
+    ]
+  },
+  {
+    text: "The thing you fear most is:",
+    opts: [
+      { label: "Losing control of everything you built", keys: ["control","power","losing","collapse","fail"], gl: "M" },
+      { label: "Being abandoned by the people you love",  keys: ["abandon","alone","leave","lose her","lose him"], gl: "F" },
+      { label: "Becoming the thing that hurt you",         keys: ["becoming","repeat","same as","turn into","haunt"] },
+      { label: "Never being enough, no matter what you do",keys: ["enough","worth","prove","inadequa","shame"] }
+    ]
+  },
+  {
+    text: "Your moral code, in one phrase:",
+    opts: [
+      { label: "An eye for an eye",                      keys: ["eye for an eye","revenge","debt","repay","justice"] },
+      { label: "Family comes before everything",         keys: ["family first","family comes","blood","loyalty to family"] },
+      { label: "Never betray someone who trusted you",   keys: ["never betray","loyal","trust","promise","word"] },
+      { label: "Survive — whatever that takes",           keys: ["surviv","whatever it takes","did what i had to","no choice"], gl: "F" }
+    ]
+  },
+  {
+    text: "At a gathering, you are most likely to be:",
+    opts: [
+      { label: "Holding court — the room follows you",   keys: ["commanding","charismatic","presence","powerful","leader"], gl: "M" },
+      { label: "Quietly watching everyone else",          keys: ["watch","observ","quiet","reserved","guarded"], gl: "F" },
+      { label: "Making sure everyone else is okay",        keys: ["caring","nurtur","host","check on","look after"], gl: "F" },
+      { label: "Somewhere else entirely — crowds aren't your thing", keys: ["withdrawn","solitary","avoid","alone","distant"] }
+    ]
+  },
+  {
+    text: "A rival underestimates you. You:",
+    opts: [
+      { label: "Let them — it works in your favour",     keys: ["clever","strateg","patient","calculat","plan"] },
+      { label: "Make them regret it, publicly",           keys: ["ruthless","fierce","dominant","power","command"], gl: "M" },
+      { label: "Prove them wrong quietly, then walk away", keys: ["quiet","composed","dignity","prove","self-respect"], gl: "F" },
+      { label: "Feel the old anger rise, and let it",       keys: ["rage","anger","temper","explosive","violent"], gl: "M" }
+    ]
+  },
+  {
+    text: "If your story ended tomorrow, you would want to be remembered as:",
+    opts: [
+      { label: "Someone who was loved, completely",      keys: ["love","loved","devotion","cherish","adored"], gl: "F" },
+      { label: "Someone who was never broken",             keys: ["unbroken","strength","survived","resilien","unbent"] },
+      { label: "Someone who protected what mattered",      keys: ["protect","guard","shield","saved","kept safe"] },
+      { label: "Someone who was finally, truly free",       keys: ["free","freedom","escaped","liberat","no longer"] }
+    ]
+  }
+];
+
+// ── State ──
+var answers = [];       // indexed by question index: {optIndex, label, keys, gl}
+var current = 0;
+var lastTop = null;
+var lastClose = [];
+var lastExplanation = '';
+var lastMatchNote = '';
+
+function cleanSentenceFragment(str) {
+  return (str || '').replace(/['"]+$/g, '').trim().replace(/[.;!]+$/, '');
+}
+
+function getMatchedLabels(c) {
+  var text = [c.traits, c.strength, c.flaw, c.code, c.role].join(' ').toLowerCase();
+  var matched = [];
+  answers.forEach(function(a) {
+    if (a && a.keys && a.keys.some(function(k) { return text.includes(k); })) {
+      matched.push(cleanSentenceFragment(a.label));
+    }
+  });
+  return matched;
+}
+
+function buildCharacterExplanation(c, matchedLabels) {
+  var traits = cleanSentenceFragment(c.traits);
+  var strength = cleanSentenceFragment(c.strength);
+  var flaw = cleanSentenceFragment(c.flaw);
+  var code = cleanSentenceFragment(c.code);
+  var famText = c.fam && c.fam !== 'Other characters' ? ' of the ' + c.fam + ' house' : ' in the Rachayetria universe';
+
+  var part1 = c.name + famText + ' is defined by a blend of ' + (traits || 'distinct inner resolve') + '.';
+  var part2 = '';
+
+  if (strength && flaw) {
+    part2 = ' You carry a similar pull between ' + strength.toLowerCase() + ' and an underlying tension around ' + flaw.toLowerCase() + '.';
+  } else if (strength) {
+    part2 = ' This match reflects a strong alignment with ' + strength.toLowerCase() + '.';
+  } else if (flaw) {
+    part2 = ' Your answers echo the same vulnerability around ' + flaw.toLowerCase() + '.';
+  }
+
+  var part3 = '';
+  if (code && code.toLowerCase() !== 'none' && code.toLowerCase() !== 'none stated') {
+    part3 = ' At their core lives a guiding rule: "' + code + '."';
+  }
+
+  var mainText = (part1 + part2 + part3).trim();
+
+  var matchNote = '';
+  if (matchedLabels.length > 0) {
+    var topPicks = matchedLabels.slice(0, 3);
+    matchNote = 'Why this match stood out: your choices around "' + topPicks.join('", "') + '" mirrored how ' + c.name + ' reacts when pushed.';
+  } else {
+    matchNote = 'Why this match stood out: across all thirteen choices, your overall temperament lined up closest with ' + c.name + ' over the rest of the cast.';
+  }
+
+  return { main: mainText, note: matchNote };
+}
+
+// ── Fair & Equal Probability Ranking ──
+// Every character gets a normalized percentile rank (0.0 to 1.0) on trait alignment
+// so short-bio characters never get an artificial math boost over long-bio characters,
+// and every single character in CHARS has an equal baseline chance of winning.
+function rankCharacters() {
+  var glCount = { M: 0, F: 0 };
+  answers.forEach(function(a) {
+    if (a && a.gl) glCount[a.gl]++;
+  });
+  var leaning = glCount.M > glCount.F ? 'M' : (glCount.F > glCount.M ? 'F' : null);
+
+  var rawList = CHARS.map(function(c, idx) {
+    var text = [c.traits, c.strength, c.flaw, c.code, c.role].join(' ').toLowerCase();
+    var matchedCount = 0;
+    answers.forEach(function(a) {
+      if (!a) return;
+      if (a.keys.some(function(k) { return text.includes(k); })) {
+        matchedCount++;
+      }
+    });
+    return { c: c, idx: idx, raw: matchedCount };
+  });
+
+  // Sort by raw matches + random jitter so ties are shuffled fairly
+  var byRaw = rawList.slice().sort(function(a, b) {
+    if (b.raw !== a.raw) return b.raw - a.raw;
+    return Math.random() - 0.5;
+  });
+
+  var total = byRaw.length || 1;
+  byRaw.forEach(function(item, rankPos) {
+    // Percentile rank from 1.0 (best match) down to 0.0
+    var normFit = total > 1 ? (total - 1 - rankPos) / (total - 1) : 1;
+    var genderNudge = (leaning && item.c.g === leaning) ? 0.08 : 0;
+    // Equal random variance across all 56 characters so any matching character can surface
+    item.finalScore = normFit + genderNudge + (Math.random() * 0.35);
+  });
+
+  byRaw.sort(function(a, b) { return b.finalScore - a.finalScore; });
+  return byRaw;
+}
+
+function render() {
+  var pct = Math.round((current / QUESTIONS.length) * 100);
+  document.getElementById('prog').style.width = pct + '%';
+
+  var q = QUESTIONS[current];
+  var saved = answers[current];
+  var html = '<div class="q-num">Question ' + (current + 1) + ' of ' + QUESTIONS.length + '</div>';
+  html += '<div class="q-text">' + q.text + '</div>';
+  html += '<div class="opts">';
+  q.opts.forEach(function(o, i) {
+    var selClass = (saved && saved.optIndex === i) ? ' selected' : '';
+    html += '<button class="opt' + selClass + '" onclick="pick(' + i + ')">' + o.label + '</button>';
+  });
+  html += '</div>';
+
+  if (current > 0) {
+    html += '<div class="q-nav"><button type="button" class="back-btn" onclick="goBack()">← Previous question</button></div>';
+  }
+
+  document.getElementById('q-card').innerHTML = html;
+}
+
+function goBack() {
+  if (current > 0) {
+    current--;
+    render();
+  }
+}
+
+function pick(i) {
+  var opt = QUESTIONS[current].opts[i];
+  answers[current] = { optIndex: i, label: opt.label, keys: opt.keys, gl: opt.gl || null };
+
+  var btns = document.querySelectorAll('.opt');
+  btns.forEach(function(b) { b.classList.remove('selected'); });
+  if (btns[i]) btns[i].classList.add('selected');
+
+  setTimeout(function() {
+    current++;
+    if (current < QUESTIONS.length) {
+      render();
+    } else {
+      showResult();
+    }
+  }, 220);
+}
+
+function initials(name) {
+  return name.split(/\s+/).slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+}
+
+function showResult() {
+  var ranked = rankCharacters();
+
+  var top = ranked[0].c;
+  var close = ranked.slice(1, 5).map(function(x) { return x.c; });
+  lastTop = top;
+  lastClose = close;
+
+  var matchedLabels = getMatchedLabels(top);
+  var exp = buildCharacterExplanation(top, matchedLabels);
+  lastExplanation = exp.main;
+  lastMatchNote = exp.note;
+
+  var ava = document.getElementById('res-ava');
+  ava.innerHTML = '';
+  var img = document.createElement('img');
+  img.src = 'photos/characters/' + top.id + '.jpg';
+  img.alt = top.name;
+  img.onerror = function() {
+    img.remove();
+    ava.textContent = initials(top.name);
+  };
+  ava.appendChild(img);
+
+  document.getElementById('res-name').textContent = top.name;
+  document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
+  document.getElementById('res-role').textContent = top.role || '';
+
+  var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
+  document.getElementById('res-traits').innerHTML = traits.map(function(t) {
+    return '<span class="trait-chip">' + t + '</span>';
+  }).join('');
+
+  document.getElementById('res-why-main').textContent = exp.main;
+  document.getElementById('res-why-match').textContent = exp.note;
+
+  var ag = document.getElementById('also-grid');
+  ag.innerHTML = close.map(function(c) {
+    return '<div class="also-card">' +
+      '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
+      '<div class="also-name">' + c.name + '</div>' +
+      '<div class="also-fam">' + (c.fam || '') + '</div></div>';
+  }).join('');
+
+  close.forEach(function(c) {
+    var el = document.getElementById('ava-' + c.id);
+    if (!el) return;
+    var i2 = document.createElement('img');
+    i2.src = 'photos/characters/' + c.id + '.jpg';
+    i2.alt = c.name;
+    i2.onerror = function() { i2.remove(); };
+    i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
+    el.appendChild(i2);
+  });
+
+  var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
+    (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' +
+    exp.main + '\n\nFind out who you are: ' + (location.href.split('?')[0]);
+  document.getElementById('share-text').textContent = shareText;
+  window._shareText = shareText;
+
+  document.getElementById('quiz-section').classList.add('hide');
+  var rs = document.getElementById('result-section');
+  rs.classList.add('show');
+  window.scrollTo(0, 0);
+
+  document.getElementById('card-status').textContent = 'Preparing your character card...';
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
+  } else {
+    prepareCardWithAssets(top, close);
+  }
+}
+
+// ── Shareable character card (canvas-drawn, compact rectangle + "Also close to you" boxes) ──
+function wrapLines(ctx, text, maxWidth) {
+  var words = text.split(' '), lines = [], line = '';
+  words.forEach(function(w) {
+    var test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function loadOptionalImage(src) {
+  return new Promise(function(resolve) {
+    var im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = function() { resolve(im); };
+    im.onerror = function() { resolve(null); };
+    im.src = src;
+  });
+}
+
+function prepareCardWithAssets(top, closeList) {
+  var allIds = [top.id].concat(closeList.map(function(c) { return c.id; }));
+  Promise.all(allIds.map(function(id) {
+    return loadOptionalImage('photos/characters/' + id + '.jpg');
+  })).then(function(imgs) {
+    var photoMap = {};
+    allIds.forEach(function(id, idx) {
+      photoMap[id] = imgs[idx];
+    });
+    drawCard(top, closeList, photoMap);
+  });
+}
+
+function drawCard(top, closeList, photoMap) {
+  var cv = document.getElementById('card-canvas');
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+
+  // Regal background gradient
+  var bg = ctx.createRadialGradient(W/2, 170, 30, W/2, H/2, W*1.05);
+  bg.addColorStop(0, '#36165c');
+  bg.addColorStop(0.45, '#190b2c');
+  bg.addColorStop(1, '#07040d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Double gold frame
+  ctx.strokeStyle = 'rgba(212,175,55,.65)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(36, 36, W - 72, H - 72);
+
+  ctx.strokeStyle = 'rgba(212,175,55,.25)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(52, 52, W - 104, H - 104);
+
+  // Corner accents
+  var corners = [
+    [52, 52, 1, 1],
+    [W - 52, 52, -1, 1],
+    [52, H - 52, 1, -1],
+    [W - 52, H - 52, -1, -1]
+  ];
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 3;
+  corners.forEach(function(c) {
+    var x = c[0], y = c[1], dx = c[2], dy = c[3];
+    ctx.beginPath();
+    ctx.moveTo(x, y + dy * 26);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + dx * 26, y);
+    ctx.stroke();
+  });
+
+  // Header label
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#d4af37';
+  ctx.font = '600 24px Inter, sans-serif';
+  ctx.fillText('RACHAYETRIA UNIVERSE', W/2, 108);
+
+  // Divider ornament
+  ctx.strokeStyle = 'rgba(212,175,55,.7)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(W/2 - 110, 134); ctx.lineTo(W/2 - 20, 134);
+  ctx.moveTo(W/2 + 20, 134); ctx.lineTo(W/2 + 110, 134);
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(W/2, 134);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = '#d4af37';
+  ctx.fillRect(-5, -5, 10, 10);
+  ctx.restore();
+
+  // Main Character Avatar
+  var cx = W/2, cy = 232, r = 78;
+  var topPhoto = photoMap[top.id];
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(212,175,55,.35)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  if (topPhoto && topPhoto.naturalWidth > 0) {
+    var scale = Math.max((r * 2) / topPhoto.naturalWidth, (r * 2) / topPhoto.naturalHeight);
+    var pw = topPhoto.naturalWidth * scale;
+    var ph = topPhoto.naturalHeight * scale;
+    ctx.drawImage(topPhoto, cx - pw / 2, cy - ph / 2, pw, ph);
+  } else {
+    var avaGrad = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+    avaGrad.addColorStop(0, '#24133d');
+    avaGrad.addColorStop(1, '#12091c');
+    ctx.fillStyle = avaGrad;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.fillStyle = '#f3e5ab';
+    ctx.font = '700 48px Cinzel, Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initials(top.name), cx, cy + 4);
+  }
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // "YOU ARE"
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#d4af37';
+  ctx.font = '600 20px Inter, sans-serif';
+  ctx.fillText('YOU ARE', W/2, 355);
+
+  // Character Name
+  ctx.fillStyle = '#f3e5ab';
+  ctx.font = '700 46px Cinzel, Georgia, serif';
+  var nameLines = wrapLines(ctx, top.name, W - 150).slice(0, 2);
+  var ny = 410;
+  nameLines.forEach(function(ln) {
+    ctx.fillText(ln, W/2, ny);
+    ny += 50;
+  });
+
+  // Family & Role
+  if (top.fam) {
+    ctx.fillStyle = '#b9accb';
+    ctx.font = 'italic 27px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText(top.fam + ' family', W/2, ny + 4);
+    ny += 36;
+  }
+
+  if (top.role) {
+    ctx.fillStyle = '#f3e5ab';
+    ctx.font = 'italic 25px "Cormorant Garamond", Georgia, serif';
+    var roleLines = wrapLines(ctx, top.role, W - 180).slice(0, 1);
+    roleLines.forEach(function(ln) {
+      ctx.fillText(ln, W/2, ny);
+      ny += 32;
+    });
+  }
+
+  // Trait Chips (compact row)
+  var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean).slice(0, 4);
+  if (traits.length) {
+    ctx.font = '500 21px Inter, sans-serif';
+    var pad = 18, gap = 10, chipH = 38;
+    var widths = traits.map(function(t) { return ctx.measureText(t).width + pad * 2; });
+    var totalW = widths.reduce(function(a,b){return a+b;}, 0) + gap * (traits.length - 1);
+
+    if (totalW <= W - 140) {
+      var startX = W/2 - totalW/2;
+      var chipY = ny + 22;
+      traits.forEach(function(t, i) {
+        var w = widths[i];
+        ctx.strokeStyle = 'rgba(212,175,55,.55)';
+        ctx.fillStyle = 'rgba(7,4,13,.55)';
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, startX, chipY - chipH/2, w, chipH, 19);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#f3e5ab';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(t, startX + w/2, chipY + 1);
+        ctx.textBaseline = 'alphabetic';
+        startX += w + gap;
+      });
+      ny = chipY + 34;
+    } else {
+      ctx.fillStyle = '#d4af37';
+      ctx.font = '500 22px Inter, sans-serif';
+      var tLine = traits.join('  •  ');
+      var tLines = wrapLines(ctx, tLine, W - 160).slice(0, 1);
+      ny += 20;
+      tLines.forEach(function(ln) {
+        ctx.fillText(ln, W/2, ny);
+        ny += 28;
+      });
+    }
+  }
+
+  // ── Compact Horizontal Rectangle for Explanation ──
+  var boxX = 84;
+  var boxW = W - 168;
+  var boxY = Math.max(ny + 10, 560);
+  var boxH = 265;
+
+  ctx.fillStyle = 'rgba(10, 5, 18, 0.72)';
+  ctx.strokeStyle = 'rgba(212,175,55,.45)';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, boxX, boxY, boxW, boxH, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  // Gold accent bar on left
+  ctx.fillStyle = '#d4af37';
+  roundRect(ctx, boxX + 16, boxY + 20, 4, boxH - 40, 2);
+  ctx.fill();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#d4af37';
+  ctx.font = '600 19px Inter, sans-serif';
+  ctx.fillText('WHY YOU GOT THIS CHARACTER', boxX + 36, boxY + 42);
+
+  ctx.fillStyle = '#f3e5ab';
+  ctx.font = '26px "Cormorant Garamond", Georgia, serif';
+  var expLines = wrapLines(ctx, lastExplanation, boxW - 72).slice(0, 4);
+  var ey = boxY + 76;
+  expLines.forEach(function(ln) {
+    ctx.fillText(ln, boxX + 36, ey);
+    ey += 32;
+  });
+
+  ctx.fillStyle = '#b9accb';
+  ctx.font = 'italic 22px "Cormorant Garamond", Georgia, serif';
+  var noteLines = wrapLines(ctx, lastMatchNote, boxW - 72).slice(0, 2);
+  var nty = ey + 6;
+  noteLines.forEach(function(ln) {
+    if (nty < boxY + boxH - 14) {
+      ctx.fillText(ln, boxX + 36, nty);
+      nty += 27;
+    }
+  });
+
+  // ── "Also Close To You" Section with 4 Character Boxes ──
+  var alsoTopY = boxY + boxH + 26;
+  var alsoOuterH = 385;
+
+  ctx.fillStyle = 'rgba(19, 10, 28, 0.75)';
+  ctx.strokeStyle = 'rgba(212,175,55,.32)';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, boxX, alsoTopY, boxW, alsoOuterH, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#a094b0';
+  ctx.font = '600 20px Inter, sans-serif';
+  ctx.fillText('ALSO CLOSE TO YOU', boxX + 26, alsoTopY + 38);
+
+  var gridGap = 16;
+  var innerPad = 24;
+  var cardW = (boxW - innerPad * 2 - gridGap) / 2;
+  var cardH = 145;
+  var gridStartY = alsoTopY + 56;
+
+  closeList.slice(0, 4).forEach(function(c, idx) {
+    var col = idx % 2;
+    var row = Math.floor(idx / 2);
+    var cxBox = boxX + innerPad + col * (cardW + gridGap);
+    var cyBox = gridStartY + row * (cardH + gridGap);
+
+    // Individual character box
+    ctx.fillStyle = 'rgba(7, 4, 13, 0.75)';
+    ctx.strokeStyle = 'rgba(212,175,55,.32)';
+    ctx.lineWidth = 1.2;
+    roundRect(ctx, cxBox, cyBox, cardW, cardH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Small circular avatar inside each box
+    var avR = 26;
+    var avX = cxBox + cardW / 2;
+    var avY = cyBox + 42;
+    var cPhoto = photoMap[c.id];
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(avX, avY, avR, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (cPhoto && cPhoto.naturalWidth > 0) {
+      var sc = Math.max((avR * 2) / cPhoto.naturalWidth, (avR * 2) / cPhoto.naturalHeight);
+      var w2 = cPhoto.naturalWidth * sc;
+      var h2 = cPhoto.naturalHeight * sc;
+      ctx.drawImage(cPhoto, avX - w2 / 2, avY - h2 / 2, w2, h2);
+    } else {
+      ctx.fillStyle = '#130a1c';
+      ctx.fillRect(avX - avR, avY - avR, avR * 2, avR * 2);
+      ctx.fillStyle = '#d4af37';
+      ctx.font = '700 21px Cinzel, Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials(c.name), avX, avY + 2);
+    }
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(avX, avY, avR, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(212,175,55,.45)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Character name & family inside box
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#f3e5ab';
+    ctx.font = '600 22px "Cormorant Garamond", Georgia, serif';
+    var shortName = wrapLines(ctx, c.name, cardW - 24)[0] || c.name;
+    ctx.fillText(shortName, cxBox + cardW / 2, cyBox + 98);
+
+    ctx.fillStyle = '#a094b0';
+    ctx.font = '500 17px Inter, sans-serif';
+    ctx.fillText(c.fam || '', cxBox + cardW / 2, cyBox + 124);
+  });
+
+  // Footer
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = 'rgba(212,175,55,.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(130, H - 130); ctx.lineTo(W - 130, H - 130);
+  ctx.stroke();
+
+  ctx.fillStyle = '#a094b0';
+  ctx.font = '500 21px Inter, sans-serif';
+  ctx.fillText('Play the Rachayetria Character Quiz:', W/2, H - 92);
+
+  ctx.fillStyle = '#d4af37';
+  ctx.font = '600 23px Inter, sans-serif';
+  var link = (location.href.split('?')[0].split('#')[0]) || 'the quiz link';
+  var linkLines = wrapLines(ctx, link, W - 150).slice(0, 2);
+  var ly = H - 58;
+  linkLines.forEach(function(ln) {
+    ctx.fillText(ln, W/2, ly);
+    ly += 28;
+  });
+
+  var prev = document.getElementById('card-preview');
+  var statusEl = document.getElementById('card-status');
+
+  try {
+    var dataUrl = cv.toDataURL('image/png');
+    prev.src = dataUrl;
+    prev.hidden = false;
+    statusEl.textContent = 'Your card is ready above — tap "Download image" or "Share with friends".';
+  } catch (err) {
+    statusEl.textContent = 'Card preview ready.';
+  }
+
+  cv.toBlob(function(blob) {
+    if (!blob) return;
+    if (window._cardBlobUrl) URL.revokeObjectURL(window._cardBlobUrl);
+    var url = URL.createObjectURL(blob);
+    window._cardBlobUrl = url;
+    window._cardFile = new File([blob], 'rachayetria-' + (top.id || 'result').toLowerCase() + '.png', { type: 'image/png' });
+    prev.src = url;
+    prev.hidden = false;
+  }, 'image/png');
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function downloadCard() {
+  var msg = document.getElementById('copy-msg');
+
+  if (window._cardFile && navigator.canShare && navigator.canShare({ files: [window._cardFile] })) {
+    navigator.share({ files: [window._cardFile], title: 'Rachayetria Universe' })
+      .catch(function() {});
+    return;
+  }
+
+  if (window._cardBlobUrl) {
+    var a = document.createElement('a');
+    a.href = window._cardBlobUrl;
+    a.download = 'rachayetria-' + (lastTop ? lastTop.id : 'result') + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if (msg) {
+      msg.textContent = 'Download started! If nothing saved automatically, press and hold the card image above and tap "Save Image."';
+      setTimeout(function() { if (msg.textContent.indexOf('Download started') !== -1) msg.textContent = ''; }, 6000);
+    }
+    return;
+  }
+
+  var prev = document.getElementById('card-preview');
+  if (prev && prev.src) {
+    var a2 = document.createElement('a');
+    a2.href = prev.src;
+    a2.download = 'rachayetria-' + (lastTop ? lastTop.id : 'result') + '.png';
+    document.body.appendChild(a2);
+    a2.click();
+    document.body.removeChild(a2);
+  }
+}
+
+function shareToFriends() {
+  var msg = document.getElementById('copy-msg');
+  var text = window._shareText || '';
+  var url = location.href.split('?')[0];
+
+  if (navigator.share && window._cardFile && navigator.canShare && navigator.canShare({ files: [window._cardFile] })) {
+    navigator.share({
+      files: [window._cardFile],
+      title: 'Rachayetria Universe',
+      text: text
+    }).catch(function() {});
+    return;
+  }
+
+  if (navigator.share) {
+    navigator.share({ title: 'Rachayetria Universe', text: text, url: url })
+      .catch(function() {});
+    return;
+  }
+
+  copyResult();
+  msg.textContent = 'Your device can’t open the share sheet here — the result was copied instead. Paste it anywhere.';
+}
+
+function copyResult() {
+  var msg = document.getElementById('copy-msg');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(window._shareText || '').then(function() {
+      msg.textContent = 'Copied!';
+      setTimeout(function() { msg.textContent = ''; }, 2500);
+    }).catch(function() {
+      fallbackCopy();
+    });
+  } else {
+    fallbackCopy();
+  }
+  function fallbackCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = window._shareText || '';
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); msg.textContent = 'Copied!'; } catch(e) { msg.textContent = 'Select the text above to copy.'; }
+    document.body.removeChild(ta);
+    setTimeout(function() { msg.textContent = ''; }, 2500);
+  }
+}
+
+function restart() {
+  answers = [];
+  current = 0;
+  document.getElementById('result-section').classList.remove('show');
+  document.getElementById('quiz-section').classList.remove('hide');
+  document.getElementById('prog').style.width = '0%';
+  render();
+  window.scrollTo(0, 0);
+}
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>
+
