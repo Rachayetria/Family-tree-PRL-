@@ -488,7 +488,7 @@ body {
 
 <script>
 // ── CONFIG ── edit this one line ────────────────────────────────────────────
-var READ_URL = 'https://www.wattpad.com/user/YOUR_WATTPAD';   // your Wattpad
+var READ_URL = 'https://www.wattpad.com/user/Rachayetria?utm_source=android&utm_medium=link&utm_campaign=invitefriends';   // your Wattpad
 // ────────────────────────────────────────────────────────────────────────────
 
 document.getElementById('read-link').href = READ_URL;
@@ -887,6 +887,13 @@ function showResult() {
   document.getElementById('share-text').textContent = shareText;
   window._shareText = shareText;
 
+  try {
+  localStorage.setItem('rq_top', JSON.stringify(lastTop));
+  localStorage.setItem('rq_close', JSON.stringify(lastClose));
+  localStorage.setItem('rq_exp', lastExplanation);
+  localStorage.setItem('rq_note', lastMatchNote);
+} catch(e) {}
+  
   document.getElementById('quiz-section').classList.add('hide');
   var rs = document.getElementById('result-section');
   rs.classList.add('show');
@@ -1392,6 +1399,12 @@ function copyResult() {
 function restart() {
   answers = [];
   current = 0;
+    try {
+    localStorage.removeItem('rq_top');
+    localStorage.removeItem('rq_close');
+    localStorage.removeItem('rq_exp');
+    localStorage.removeItem('rq_note');
+  } catch(e) {}
   document.getElementById('result-section').classList.remove('show');
   document.getElementById('quiz-section').classList.remove('hide');
   document.getElementById('prog').style.width = '0%';
@@ -1400,7 +1413,83 @@ function restart() {
 }
 
 // ── Init ──
-render();
+try {
+  var savedTop = localStorage.getItem('rq_top');
+  var savedClose = localStorage.getItem('rq_close');
+  var savedExp = localStorage.getItem('rq_exp');
+  var savedNote = localStorage.getItem('rq_note');
+
+  if (savedTop && savedClose) {
+    lastTop = JSON.parse(savedTop);
+    lastClose = JSON.parse(savedClose);
+    lastExplanation = savedExp || '';
+    lastMatchNote = savedNote || '';
+
+    var top = lastTop;
+    var close = lastClose;
+
+    var ava = document.getElementById('res-ava');
+    ava.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = 'photos/characters/' + top.id + '.jpg';
+    img.alt = top.name;
+    img.onerror = function() { img.remove(); ava.textContent = initials(top.name); };
+    ava.appendChild(img);
+
+    document.getElementById('res-name').textContent = top.name;
+    document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
+    document.getElementById('res-role').textContent = top.role || '';
+
+    var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
+    document.getElementById('res-traits').innerHTML = traits.map(function(t) {
+      return '<span class="trait-chip">' + t + '</span>';
+    }).join('');
+
+    document.getElementById('res-why-main').textContent = lastExplanation;
+    document.getElementById('res-why-match').textContent = lastMatchNote;
+
+    var ag = document.getElementById('also-grid');
+    ag.innerHTML = close.map(function(c) {
+      return '<div class="also-card">' +
+        '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
+        '<div class="also-name">' + c.name + '</div>' +
+        '<div class="also-fam">' + (c.fam || '') + '</div></div>';
+    }).join('');
+
+    close.forEach(function(c) {
+      var el = document.getElementById('ava-' + c.id);
+      if (!el) return;
+      var i2 = document.createElement('img');
+      i2.src = 'photos/characters/' + c.id + '.jpg';
+      i2.alt = c.name;
+      i2.onerror = function() { i2.remove(); };
+      i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
+      el.appendChild(i2);
+    });
+
+    var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
+      (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' +
+      lastExplanation + '\n\nFind out who you are: ' + (location.href.split('?')[0]);
+    document.getElementById('share-text').textContent = shareText;
+    window._shareText = shareText;
+
+    document.getElementById('quiz-section').classList.add('hide');
+    document.getElementById('result-section').classList.add('show');
+
+    document.getElementById('card-status').textContent = 'Preparing your character card...';
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
+    } else {
+      prepareCardWithAssets(top, close);
+    }
+
+  } else {
+    render();
+  }
+} catch(e) {
+  render();
+}
+  
 </script>
 </body>
 </html>
