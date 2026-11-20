@@ -1313,10 +1313,8 @@ function downloadCard() {
     var isIOS = /iPhone|iPad|iPod/.test(ua);
 
     if (isInApp) {
-      // Build the URL with the character ID baked in
-      var resultParam = '?r=' + encodeURIComponent(lastTop.id);
-      var fullUrl = location.href.split('?')[0] + resultParam;
-
+      // Build URL with character ID so Chrome restores result after redirect
+      var fullUrl = location.href.split('?')[0] + '?r=' + encodeURIComponent(lastTop.id);
       var overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,4,13,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;text-align:center';
       overlay.innerHTML =
@@ -1324,14 +1322,23 @@ function downloadCard() {
         '<div style="font-family:Cinzel,Georgia,serif;color:#d4af37;font-size:1.2rem;font-weight:700;margin-bottom:14px">Instagram cannot save images</div>' +
         '<div style="color:#f3e5ab;font-family:sans-serif;font-size:0.97rem;line-height:1.65;margin-bottom:20px">' +
         'Instagram blocks all downloads.<br><br>' +
-        '👉 Tap the button below to open your result in your real browser, then tap <strong style="color:#d4af37">Download Image</strong>.' +
+        'Tap the button below to open your result in Chrome or Safari, then tap <strong style="color:#d4af37">Download Image</strong>.' +
         '</div>' +
-        '<a href="' + fullUrl + '" target="_blank" style="display:inline-block;background:#d4af37;color:#1a1020;border:none;border-radius:99px;padding:14px 32px;font-family:sans-serif;font-weight:700;font-size:1rem;cursor:pointer;text-decoration:none;margin-bottom:16px">Open in Browser &amp; Download</a>' +
-        '<br><button onclick="this.parentNode.remove()" style="background:transparent;border:1px solid rgba(212,175,55,.4);border-radius:99px;padding:10px 24px;color:#a094b0;font-family:sans-serif;font-size:0.85rem;cursor:pointer;margin-top:8px">Dismiss</button>';
+        '<a href="' + fullUrl + '" target="_blank" rel="noopener" style="display:inline-block;background:#d4af37;color:#1a1020;border-radius:99px;padding:14px 32px;font-family:sans-serif;font-weight:700;font-size:1rem;text-decoration:none;margin-bottom:16px">Open in Browser &amp; Download</a><br>' +
+        '<button onclick="this.parentNode.remove()" style="background:transparent;border:1px solid rgba(212,175,55,.4);border-radius:99px;padding:10px 24px;color:#a094b0;font-family:sans-serif;font-size:0.85rem;cursor:pointer;margin-top:10px">Dismiss</button>';
       document.body.appendChild(overlay);
       return;
     }
-    
+
+    if (isIOS) {
+      var w = window.open(dataUrl, '_blank');
+      if (!w) document.location.href = dataUrl;
+      if (msg) {
+        msg.textContent = 'Image opened — press and hold it, then tap Save Image.';
+        setTimeout(function() { msg.textContent = ''; }, 6000);
+      }
+      return;
+    }
 
     var a = document.createElement('a');
     a.href = dataUrl;
@@ -1401,18 +1408,12 @@ function copyResult() {
 function restart() {
   answers = [];
   current = 0;
-    try {
+  try {
     localStorage.removeItem('rq_top');
     localStorage.removeItem('rq_close');
     localStorage.removeItem('rq_exp');
     localStorage.removeItem('rq_note');
     history.replaceState(null, '', location.href.split('?')[0]);
-  } catch(e) {}
-    try {
-    localStorage.removeItem('rq_top');
-    localStorage.removeItem('rq_close');
-    localStorage.removeItem('rq_exp');
-    localStorage.removeItem('rq_note');
   } catch(e) {}
   document.getElementById('result-section').classList.remove('show');
   document.getElementById('quiz-section').classList.remove('hide');
@@ -1422,134 +1423,117 @@ function restart() {
 }
 
 // ── Init ──
-try {
-  var urlParams = new URLSearchParams(location.search);
-  var urlResultId = urlParams.get('r');
-  var savedTop = localStorage.getItem('rq_top');
-  var savedClose = localStorage.getItem('rq_close');
-  var savedExp = localStorage.getItem('rq_exp');
-  var savedNote = localStorage.getItem('rq_note');
+(function() {
+  // Step 1: check URL for ?r=CHARACTER_ID (survives Instagram -> Chrome redirect)
+  var urlResultId = null;
+  try {
+    urlResultId = new URLSearchParams(location.search).get('r');
+  } catch(e) {}
 
-  var restoreTop = null;
-  var restoreClose = null;
-  var restoreExp = '';
-  var restoreNote = '';
-
+  // Step 2: find character by ID
+  var foundChar = null;
   if (urlResultId) {
-    // URL has character ID — find it in CHARS
-    for (var ci = 0; ci < CHARS.length; ci++) {
-      if (CHARS[ci].id === urlResultId) {
-        restoreTop = CHARS[ci];
-        break;
-      }
+    for (var i = 0; i < CHARS.length; i++) {
+      if (CHARS[i].id === urlResultId) { foundChar = CHARS[i]; break; }
     }
-    if (restoreTop) {
-      // Try to get full data from localStorage if available
-      if (savedTop) {
-        try {
-          var lt = JSON.parse(savedTop);
-          if (lt.id === urlResultId) {
-            restoreTop = lt;
-            restoreClose = JSON.parse(savedClose);
-            restoreExp = savedExp || '';
-            restoreNote = savedNote || '';
-          }
-        } catch(e) {}
-      }
-      // If localStorage didn't match, build fresh from CHARS
-      if (!restoreClose) {
-        restoreClose = CHARS.filter(function(c) {
-          return c.id !== restoreTop.id;
-        }).sort(function() {
-          return Math.random() - 0.5;
-        }).slice(0, 4);
-        var builtExp = buildCharacterExplanation(restoreTop, []);
-        restoreExp = builtExp.main;
-        restoreNote = builtExp.note;
-      }
-    }
-  } else if (savedTop && savedClose) {
+  }
+
+  // Step 3: if no URL match, try localStorage (same browser returning visitor)
+  if (!foundChar) {
     try {
-      restoreTop = JSON.parse(savedTop);
-      restoreClose = JSON.parse(savedClose);
-      restoreExp = savedExp || '';
-      restoreNote = savedNote || '';
+      var saved = localStorage.getItem('rq_top');
+      if (saved) foundChar = JSON.parse(saved);
     } catch(e) {}
   }
 
-  if (restoreTop && restoreClose) {
-    lastTop = restoreTop;
-    lastClose = restoreClose;
-    lastExplanation = restoreExp;
-    lastMatchNote = restoreNote;
+  // Step 4: if we have a character to restore, show result page
+  if (foundChar) {
+    try {
+      var top = foundChar;
+      var closeRaw = null;
+      try { closeRaw = JSON.parse(localStorage.getItem('rq_close')); } catch(e) {}
+      var close = (closeRaw && closeRaw.length) ? closeRaw : CHARS.filter(function(c) {
+        return c.id !== top.id;
+      }).sort(function() { return Math.random() - 0.5; }).slice(0, 4);
 
-    var top = lastTop;
-    var close = lastClose;
+      var expRaw = '';
+      var noteRaw = '';
+      try { expRaw = localStorage.getItem('rq_exp') || ''; } catch(e) {}
+      try { noteRaw = localStorage.getItem('rq_note') || ''; } catch(e) {}
+      if (!expRaw) {
+        var built = buildCharacterExplanation(top, []);
+        expRaw = built.main;
+        noteRaw = built.note;
+      }
 
-    var ava = document.getElementById('res-ava');
-    ava.innerHTML = '';
-    var img = document.createElement('img');
-    img.src = 'photos/characters/' + top.id + '.jpg';
-    img.alt = top.name;
-    img.onerror = function() { img.remove(); ava.textContent = initials(top.name); };
-    ava.appendChild(img);
+      lastTop = top;
+      lastClose = close;
+      lastExplanation = expRaw;
+      lastMatchNote = noteRaw;
 
-    document.getElementById('res-name').textContent = top.name;
-    document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
-    document.getElementById('res-role').textContent = top.role || '';
+      var ava = document.getElementById('res-ava');
+      ava.innerHTML = '';
+      var img = document.createElement('img');
+      img.src = 'photos/characters/' + top.id + '.jpg';
+      img.alt = top.name;
+      img.onerror = function() { img.remove(); ava.textContent = initials(top.name); };
+      ava.appendChild(img);
 
-    var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
-    document.getElementById('res-traits').innerHTML = traits.map(function(t) {
-      return '<span class="trait-chip">' + t + '</span>';
-    }).join('');
+      document.getElementById('res-name').textContent = top.name;
+      document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
+      document.getElementById('res-role').textContent = top.role || '';
 
-    document.getElementById('res-why-main').textContent = restoreExp;
-    document.getElementById('res-why-match').textContent = restoreNote;
+      var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
+      document.getElementById('res-traits').innerHTML = traits.map(function(t) {
+        return '<span class="trait-chip">' + t + '</span>';
+      }).join('');
 
-    var ag = document.getElementById('also-grid');
-    ag.innerHTML = close.map(function(c) {
-      return '<div class="also-card">' +
-        '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
-        '<div class="also-name">' + c.name + '</div>' +
-        '<div class="also-fam">' + (c.fam || '') + '</div></div>';
-    }).join('');
+      document.getElementById('res-why-main').textContent = expRaw;
+      document.getElementById('res-why-match').textContent = noteRaw;
 
-    close.forEach(function(c) {
-      var el = document.getElementById('ava-' + c.id);
-      if (!el) return;
-      var i2 = document.createElement('img');
-      i2.src = 'photos/characters/' + c.id + '.jpg';
-      i2.alt = c.name;
-      i2.onerror = function() { i2.remove(); };
-      i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
-      el.appendChild(i2);
-    });
+      var ag = document.getElementById('also-grid');
+      ag.innerHTML = close.map(function(c) {
+        return '<div class="also-card">' +
+          '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
+          '<div class="also-name">' + c.name + '</div>' +
+          '<div class="also-fam">' + (c.fam || '') + '</div></div>';
+      }).join('');
+      close.forEach(function(c) {
+        var el = document.getElementById('ava-' + c.id);
+        if (!el) return;
+        var i2 = document.createElement('img');
+        i2.src = 'photos/characters/' + c.id + '.jpg';
+        i2.alt = c.name;
+        i2.onerror = function() { i2.remove(); };
+        i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
+        el.appendChild(i2);
+      });
 
-    var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
-      (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' +
-      restoreExp + '\n\nFind out who you are: ' + (location.href.split('?')[0]);
-    document.getElementById('share-text').textContent = shareText;
-    window._shareText = shareText;
+      var baseUrl = location.href.split('?')[0];
+      var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
+        (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' + expRaw + '\n\nFind out who you are: ' + baseUrl;
+      document.getElementById('share-text').textContent = shareText;
+      window._shareText = shareText;
 
-    document.getElementById('quiz-section').classList.add('hide');
-    document.getElementById('result-section').classList.add('show');
+      document.getElementById('quiz-section').classList.add('hide');
+      document.getElementById('result-section').classList.add('show');
+      document.getElementById('card-status').textContent = 'Preparing your character card...';
 
-    document.getElementById('card-status').textContent = 'Preparing your character card...';
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
-    } else {
-      prepareCardWithAssets(top, close);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
+      } else {
+        prepareCardWithAssets(top, close);
+      }
+
+    } catch(e) {
+      // If anything goes wrong restoring, just show the quiz
+      render();
     }
-
   } else {
     render();
   }
-
-} catch(e) {
-  render();
-}
+})();
   
 </script>
 </body>
 </html>
-
