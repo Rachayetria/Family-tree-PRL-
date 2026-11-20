@@ -1305,7 +1305,6 @@ function roundRect(ctx, x, y, w, h, r) {
 function downloadCard() {
   var msg = document.getElementById('copy-msg');
   var cv = document.getElementById('card-canvas');
-
   try {
     var dataUrl = cv.toDataURL('image/png');
     var ua = navigator.userAgent || '';
@@ -1313,7 +1312,6 @@ function downloadCard() {
     var isIOS = /iPhone|iPad|iPod/.test(ua);
 
     if (isInApp) {
-      // Build URL with character ID so Chrome restores result after redirect
       var fullUrl = location.href.split('?')[0] + '?r=' + encodeURIComponent(lastTop.id);
       var overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,4,13,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;text-align:center';
@@ -1322,10 +1320,11 @@ function downloadCard() {
         '<div style="font-family:Cinzel,Georgia,serif;color:#d4af37;font-size:1.2rem;font-weight:700;margin-bottom:14px">Instagram cannot save images</div>' +
         '<div style="color:#f3e5ab;font-family:sans-serif;font-size:0.97rem;line-height:1.65;margin-bottom:20px">' +
         'Instagram blocks all downloads.<br><br>' +
-        'Tap the button below to open your result in Chrome or Safari, then tap <strong style="color:#d4af37">Download Image</strong>.' +
+        '👉 Copy the link below, paste it into Chrome or Safari, then tap <strong style="color:#d4af37">Download Image</strong>.' +
         '</div>' +
-        '<a href="' + fullUrl + '" target="_blank" rel="noopener" style="display:inline-block;background:#d4af37;color:#1a1020;border-radius:99px;padding:14px 32px;font-family:sans-serif;font-weight:700;font-size:1rem;text-decoration:none;margin-bottom:16px">Open in Browser &amp; Download</a><br>' +
-        '<button onclick="this.parentNode.remove()" style="background:transparent;border:1px solid rgba(212,175,55,.4);border-radius:99px;padding:10px 24px;color:#a094b0;font-family:sans-serif;font-size:0.85rem;cursor:pointer;margin-top:10px">Dismiss</button>';
+        '<div id="inapp-url" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);border-radius:10px;padding:12px 18px;margin-bottom:16px;word-break:break-all;font-family:monospace;font-size:0.82rem;color:#d4af37;max-width:340px;user-select:all">' + fullUrl + '</div>' +
+        '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + fullUrl + '\');this.textContent=\'Copied!\';" style="background:#d4af37;color:#1a1020;border:none;border-radius:99px;padding:12px 28px;font-family:sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;margin-bottom:10px">Copy Link</button><br>' +
+        '<button onclick="this.parentNode.remove()" style="background:transparent;border:1px solid rgba(212,175,55,.4);border-radius:99px;padding:8px 22px;color:#a094b0;font-family:sans-serif;font-size:0.82rem;cursor:pointer;margin-top:6px">Dismiss</button>';
       document.body.appendChild(overlay);
       return;
     }
@@ -1333,10 +1332,7 @@ function downloadCard() {
     if (isIOS) {
       var w = window.open(dataUrl, '_blank');
       if (!w) document.location.href = dataUrl;
-      if (msg) {
-        msg.textContent = 'Image opened — press and hold it, then tap Save Image.';
-        setTimeout(function() { msg.textContent = ''; }, 6000);
-      }
+      if (msg) { msg.textContent = 'Image opened — press and hold, then tap Save Image.'; setTimeout(function(){msg.textContent='';},6000); }
       return;
     }
 
@@ -1346,13 +1342,10 @@ function downloadCard() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    if (msg) {
-      msg.textContent = 'Download started!';
-      setTimeout(function() { msg.textContent = ''; }, 4000);
-    }
+    if (msg) { msg.textContent = 'Download started!'; setTimeout(function(){msg.textContent='';},4000); }
 
   } catch (err) {
-    if (msg) msg.textContent = 'Could not download — try opening this page in Chrome browser.';
+    if (msg) msg.textContent = 'Could not download — try opening this page in Chrome.';
   }
 }
 
@@ -1424,114 +1417,76 @@ function restart() {
 
 // ── Init ──
 (function() {
-  // Step 1: check URL for ?r=CHARACTER_ID (survives Instagram -> Chrome redirect)
-  var urlResultId = null;
-  try {
-    urlResultId = new URLSearchParams(location.search).get('r');
-  } catch(e) {}
+  var rid = null;
+  try { rid = new URLSearchParams(location.search).get('r'); } catch(e) {}
 
-  // Step 2: find character by ID
-  var foundChar = null;
-  if (urlResultId) {
+  var top = null;
+  if (rid) {
     for (var i = 0; i < CHARS.length; i++) {
-      if (CHARS[i].id === urlResultId) { foundChar = CHARS[i]; break; }
+      if (CHARS[i].id === rid) { top = CHARS[i]; break; }
     }
   }
-
-  // Step 3: if no URL match, try localStorage (same browser returning visitor)
-  if (!foundChar) {
-    try {
-      var saved = localStorage.getItem('rq_top');
-      if (saved) foundChar = JSON.parse(saved);
-    } catch(e) {}
+  if (!top) {
+    try { var s = localStorage.getItem('rq_top'); if (s) top = JSON.parse(s); } catch(e) {}
   }
 
-  // Step 4: if we have a character to restore, show result page
-  if (foundChar) {
-    try {
-      var top = foundChar;
-      var closeRaw = null;
-      try { closeRaw = JSON.parse(localStorage.getItem('rq_close')); } catch(e) {}
-      var close = (closeRaw && closeRaw.length) ? closeRaw : CHARS.filter(function(c) {
-        return c.id !== top.id;
-      }).sort(function() { return Math.random() - 0.5; }).slice(0, 4);
+  if (!top) { render(); return; }
 
-      var expRaw = '';
-      var noteRaw = '';
-      try { expRaw = localStorage.getItem('rq_exp') || ''; } catch(e) {}
-      try { noteRaw = localStorage.getItem('rq_note') || ''; } catch(e) {}
-      if (!expRaw) {
-        var built = buildCharacterExplanation(top, []);
-        expRaw = built.main;
-        noteRaw = built.note;
-      }
-
-      lastTop = top;
-      lastClose = close;
-      lastExplanation = expRaw;
-      lastMatchNote = noteRaw;
-
-      var ava = document.getElementById('res-ava');
-      ava.innerHTML = '';
-      var img = document.createElement('img');
-      img.src = 'photos/characters/' + top.id + '.jpg';
-      img.alt = top.name;
-      img.onerror = function() { img.remove(); ava.textContent = initials(top.name); };
-      ava.appendChild(img);
-
-      document.getElementById('res-name').textContent = top.name;
-      document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
-      document.getElementById('res-role').textContent = top.role || '';
-
-      var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
-      document.getElementById('res-traits').innerHTML = traits.map(function(t) {
-        return '<span class="trait-chip">' + t + '</span>';
-      }).join('');
-
-      document.getElementById('res-why-main').textContent = expRaw;
-      document.getElementById('res-why-match').textContent = noteRaw;
-
-      var ag = document.getElementById('also-grid');
-      ag.innerHTML = close.map(function(c) {
-        return '<div class="also-card">' +
-          '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
-          '<div class="also-name">' + c.name + '</div>' +
-          '<div class="also-fam">' + (c.fam || '') + '</div></div>';
-      }).join('');
-      close.forEach(function(c) {
-        var el = document.getElementById('ava-' + c.id);
-        if (!el) return;
-        var i2 = document.createElement('img');
-        i2.src = 'photos/characters/' + c.id + '.jpg';
-        i2.alt = c.name;
-        i2.onerror = function() { i2.remove(); };
-        i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
-        el.appendChild(i2);
-      });
-
-      var baseUrl = location.href.split('?')[0];
-      var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
-        (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' + expRaw + '\n\nFind out who you are: ' + baseUrl;
-      document.getElementById('share-text').textContent = shareText;
-      window._shareText = shareText;
-
-      document.getElementById('quiz-section').classList.add('hide');
-      document.getElementById('result-section').classList.add('show');
-      document.getElementById('card-status').textContent = 'Preparing your character card...';
-
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
-      } else {
-        prepareCardWithAssets(top, close);
-      }
-
-    } catch(e) {
-      // If anything goes wrong restoring, just show the quiz
-      render();
+  try {
+    var close = null;
+    try { var sc = localStorage.getItem('rq_close'); if (sc) close = JSON.parse(sc); } catch(e) {}
+    if (!close || !close.length) {
+      close = CHARS.filter(function(c){ return c.id !== top.id; }).sort(function(){ return Math.random()-.5; }).slice(0,4);
     }
-  } else {
-    render();
-  }
+    var ex = ''; var nt = '';
+    try { ex = localStorage.getItem('rq_exp') || ''; } catch(e) {}
+    try { nt = localStorage.getItem('rq_note') || ''; } catch(e) {}
+    if (!ex) { var b = buildCharacterExplanation(top,[]); ex = b.main; nt = b.note; }
+
+    lastTop = top; lastClose = close; lastExplanation = ex; lastMatchNote = nt;
+
+    var ava = document.getElementById('res-ava');
+    ava.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = 'photos/characters/' + top.id + '.jpg'; img.alt = top.name;
+    img.onerror = function(){ img.remove(); ava.textContent = initials(top.name); };
+    ava.appendChild(img);
+
+    document.getElementById('res-name').textContent = top.name;
+    document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
+    document.getElementById('res-role').textContent = top.role || '';
+
+    var traits = (top.traits||'').split(/[,;]\s*/).filter(Boolean);
+    document.getElementById('res-traits').innerHTML = traits.map(function(t){ return '<span class="trait-chip">'+t+'</span>'; }).join('');
+    document.getElementById('res-why-main').textContent = ex;
+    document.getElementById('res-why-match').textContent = nt;
+
+    var ag = document.getElementById('also-grid');
+    ag.innerHTML = close.map(function(c){
+      return '<div class="also-card"><div class="also-ava" id="ava-'+c.id+'">'+initials(c.name)+'</div><div class="also-name">'+c.name+'</div><div class="also-fam">'+(c.fam||'')+'</div></div>';
+    }).join('');
+    close.forEach(function(c){
+      var el = document.getElementById('ava-'+c.id); if(!el) return;
+      var i2 = document.createElement('img'); i2.src='photos/characters/'+c.id+'.jpg'; i2.alt=c.name;
+      i2.onerror=function(){i2.remove();}; i2.onload=function(){el.innerHTML='';el.appendChild(i2);};
+      el.appendChild(i2);
+    });
+
+    var base = location.href.split('?')[0];
+    var st = 'I took the Rachayetria Universe character quiz and I am '+top.name+(top.fam?' of the '+top.fam+' family':'')+'. \n\n'+ex+'\n\nFind out who you are: '+base;
+    document.getElementById('share-text').textContent = st;
+    window._shareText = st;
+
+    document.getElementById('quiz-section').classList.add('hide');
+    document.getElementById('result-section').classList.add('show');
+    document.getElementById('card-status').textContent = 'Preparing your character card...';
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function(){ prepareCardWithAssets(top, close); });
+    } else {
+      prepareCardWithAssets(top, close);
+    }
+  } catch(e) { render(); }
 })();
   
 </script>
