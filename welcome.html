@@ -1294,35 +1294,43 @@ function roundRect(ctx, x, y, w, h, r) {
 
 function downloadCard() {
   var msg = document.getElementById('copy-msg');
+  var cv = document.getElementById('card-canvas');
 
-  if (window._cardFile && navigator.canShare && navigator.canShare({ files: [window._cardFile] })) {
-    navigator.share({ files: [window._cardFile], title: 'Rachayetria Universe' })
-      .catch(function() {});
-    return;
-  }
+  try {
+    var dataUrl = cv.toDataURL('image/png');
+    var ua = navigator.userAgent || '';
+    var isInApp = /Instagram|FBAN|FBAV|Twitter|Line\/|MicroMessenger/.test(ua);
+    var isIOS = /iPhone|iPad|iPod/.test(ua);
 
-  if (window._cardBlobUrl) {
+    if (isIOS || isInApp) {
+      var w = window.open('', '_blank');
+      if (w) {
+        w.document.write(
+          '<html><head><title>Save your card</title></head><body style="margin:0;background:#07040d;text-align:center">' +
+          '<p style="color:#d4af37;font-family:sans-serif;padding:16px;margin:0">Press and hold the image, then tap <strong>Save Image</strong></p>' +
+          '<img src="' + dataUrl + '" style="max-width:100%;display:block;margin:0 auto">' +
+          '</body></html>'
+        );
+        w.document.close();
+      } else {
+        document.location.href = dataUrl;
+      }
+      return;
+    }
+
     var a = document.createElement('a');
-    a.href = window._cardBlobUrl;
+    a.href = dataUrl;
     a.download = 'rachayetria-' + (lastTop ? lastTop.id : 'result') + '.png';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     if (msg) {
-      msg.textContent = 'Download started! If nothing saved automatically, press and hold the card image above and tap "Save Image."';
-      setTimeout(function() { if (msg.textContent.indexOf('Download started') !== -1) msg.textContent = ''; }, 6000);
+      msg.textContent = 'Download started!';
+      setTimeout(function() { msg.textContent = ''; }, 4000);
     }
-    return;
-  }
 
-  var prev = document.getElementById('card-preview');
-  if (prev && prev.src) {
-    var a2 = document.createElement('a');
-    a2.href = prev.src;
-    a2.download = 'rachayetria-' + (lastTop ? lastTop.id : 'result') + '.png';
-    document.body.appendChild(a2);
-    a2.click();
-    document.body.removeChild(a2);
+  } catch (err) {
+    if (msg) msg.textContent = 'Could not download — try opening this page in Chrome browser.';
   }
 }
 
