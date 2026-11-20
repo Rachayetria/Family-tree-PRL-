@@ -1312,27 +1312,25 @@ function downloadCard() {
     var isInApp = /Instagram|FBAN|FBAV|Twitter|Line\/|MicroMessenger/.test(ua);
     var isIOS = /iPhone|iPad|iPod/.test(ua);
 
-   if (isInApp) {
-  // Encode result ID into the URL so Chrome can restore it after redirect
-  var resultParam = '?r=' + encodeURIComponent(lastTop.id);
-  var fullUrl = location.href.split('?')[0] + resultParam;
+    if (isInApp) {
+      // Build the URL with the character ID baked in
+      var resultParam = '?r=' + encodeURIComponent(lastTop.id);
+      var fullUrl = location.href.split('?')[0] + resultParam;
 
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,4,13,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;text-align:center';
-  overlay.innerHTML =
-    '<div style="font-size:2.5rem;margin-bottom:16px">⚠️</div>' +
-    '<div style="font-family:Cinzel,Georgia,serif;color:#d4af37;font-size:1.2rem;font-weight:700;margin-bottom:14px">Instagram cannot save images</div>' +
-    '<div style="color:#f3e5ab;font-family:sans-serif;font-size:0.97rem;line-height:1.65;margin-bottom:24px">' +
-    'Instagram\'s browser blocks all downloads.<br><br>' +
-    '👉 Tap the <strong style="color:#d4af37">three dots ···</strong> at the top of your screen<br>' +
-    'then tap <strong style="color:#d4af37">"Open in Safari"</strong> or <strong style="color:#d4af37">"Open in Chrome"</strong><br><br>' +
-    'Your result will load automatically — then tap Download.' +
-    '</div>' +
-    '<div style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);border-radius:10px;padding:12px 18px;margin-bottom:20px;word-break:break-all;font-family:monospace;font-size:0.78rem;color:#d4af37;max-width:340px">' + fullUrl + '</div>' +
-    '<button onclick="this.parentNode.remove()" style="background:#d4af37;color:#1a1020;border:none;border-radius:99px;padding:12px 32px;font-family:sans-serif;font-weight:700;font-size:1rem;cursor:pointer">Got it</button>';
-  document.body.appendChild(overlay);
-  return;
-}
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,4,13,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;text-align:center';
+      overlay.innerHTML =
+        '<div style="font-size:2.5rem;margin-bottom:16px">⚠️</div>' +
+        '<div style="font-family:Cinzel,Georgia,serif;color:#d4af37;font-size:1.2rem;font-weight:700;margin-bottom:14px">Instagram cannot save images</div>' +
+        '<div style="color:#f3e5ab;font-family:sans-serif;font-size:0.97rem;line-height:1.65;margin-bottom:20px">' +
+        'Instagram blocks all downloads.<br><br>' +
+        '👉 Tap the button below to open your result in your real browser, then tap <strong style="color:#d4af37">Download Image</strong>.' +
+        '</div>' +
+        '<a href="' + fullUrl + '" target="_blank" style="display:inline-block;background:#d4af37;color:#1a1020;border:none;border-radius:99px;padding:14px 32px;font-family:sans-serif;font-weight:700;font-size:1rem;cursor:pointer;text-decoration:none;margin-bottom:16px">Open in Browser &amp; Download</a>' +
+        '<br><button onclick="this.parentNode.remove()" style="background:transparent;border:1px solid rgba(212,175,55,.4);border-radius:99px;padding:10px 24px;color:#a094b0;font-family:sans-serif;font-size:0.85rem;cursor:pointer;margin-top:8px">Dismiss</button>';
+      document.body.appendChild(overlay);
+      return;
+    }
     
 
     var a = document.createElement('a');
