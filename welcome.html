@@ -887,12 +887,15 @@ function showResult() {
   document.getElementById('share-text').textContent = shareText;
   window._shareText = shareText;
 
-  try {
-  localStorage.setItem('rq_top', JSON.stringify(lastTop));
-  localStorage.setItem('rq_close', JSON.stringify(lastClose));
-  localStorage.setItem('rq_exp', lastExplanation);
-  localStorage.setItem('rq_note', lastMatchNote);
+try {
+  localStorage.setItem('rq_top', JSON.stringify(top));
+  localStorage.setItem('rq_close', JSON.stringify(close));
+  localStorage.setItem('rq_exp', exp.main);
+  localStorage.setItem('rq_note', exp.note);
+  var newUrl = location.href.split('?')[0] + '?r=' + encodeURIComponent(top.id);
+  history.replaceState(null, '', newUrl);
 } catch(e) {}
+  
   
   document.getElementById('quiz-section').classList.add('hide');
   var rs = document.getElementById('result-section');
@@ -1405,6 +1408,13 @@ function restart() {
     localStorage.removeItem('rq_close');
     localStorage.removeItem('rq_exp');
     localStorage.removeItem('rq_note');
+    history.replaceState(null, '', location.href.split('?')[0]);
+  } catch(e) {}
+    try {
+    localStorage.removeItem('rq_top');
+    localStorage.removeItem('rq_close');
+    localStorage.removeItem('rq_exp');
+    localStorage.removeItem('rq_note');
   } catch(e) {}
   document.getElementById('result-section').classList.remove('show');
   document.getElementById('quiz-section').classList.remove('hide');
@@ -1415,12 +1425,131 @@ function restart() {
 
 // ── Init ──
 try {
+  var urlParams = new URLSearchParams(location.search);
+  var urlResultId = urlParams.get('r');
   var savedTop = localStorage.getItem('rq_top');
-var savedClose = localStorage.getItem('rq_close');
-var savedExp = localStorage.getItem('rq_exp');
-var savedNote = localStorage.getItem('rq_note');
+  var savedClose = localStorage.getItem('rq_close');
+  var savedExp = localStorage.getItem('rq_exp');
+  var savedNote = localStorage.getItem('rq_note');
 
-if (savedTop && savedClose) {
+  var restoreTop = null;
+  var restoreClose = null;
+  var restoreExp = '';
+  var restoreNote = '';
+
+  if (urlResultId) {
+    // URL has character ID — find it in CHARS
+    for (var ci = 0; ci < CHARS.length; ci++) {
+      if (CHARS[ci].id === urlResultId) {
+        restoreTop = CHARS[ci];
+        break;
+      }
+    }
+    if (restoreTop) {
+      // Try to get full data from localStorage if available
+      if (savedTop) {
+        try {
+          var lt = JSON.parse(savedTop);
+          if (lt.id === urlResultId) {
+            restoreTop = lt;
+            restoreClose = JSON.parse(savedClose);
+            restoreExp = savedExp || '';
+            restoreNote = savedNote || '';
+          }
+        } catch(e) {}
+      }
+      // If localStorage didn't match, build fresh from CHARS
+      if (!restoreClose) {
+        restoreClose = CHARS.filter(function(c) {
+          return c.id !== restoreTop.id;
+        }).sort(function() {
+          return Math.random() - 0.5;
+        }).slice(0, 4);
+        var builtExp = buildCharacterExplanation(restoreTop, []);
+        restoreExp = builtExp.main;
+        restoreNote = builtExp.note;
+      }
+    }
+  } else if (savedTop && savedClose) {
+    try {
+      restoreTop = JSON.parse(savedTop);
+      restoreClose = JSON.parse(savedClose);
+      restoreExp = savedExp || '';
+      restoreNote = savedNote || '';
+    } catch(e) {}
+  }
+
+  if (restoreTop && restoreClose) {
+    lastTop = restoreTop;
+    lastClose = restoreClose;
+    lastExplanation = restoreExp;
+    lastMatchNote = restoreNote;
+
+    var top = lastTop;
+    var close = lastClose;
+
+    var ava = document.getElementById('res-ava');
+    ava.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = 'photos/characters/' + top.id + '.jpg';
+    img.alt = top.name;
+    img.onerror = function() { img.remove(); ava.textContent = initials(top.name); };
+    ava.appendChild(img);
+
+    document.getElementById('res-name').textContent = top.name;
+    document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
+    document.getElementById('res-role').textContent = top.role || '';
+
+    var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
+    document.getElementById('res-traits').innerHTML = traits.map(function(t) {
+      return '<span class="trait-chip">' + t + '</span>';
+    }).join('');
+
+    document.getElementById('res-why-main').textContent = restoreExp;
+    document.getElementById('res-why-match').textContent = restoreNote;
+
+    var ag = document.getElementById('also-grid');
+    ag.innerHTML = close.map(function(c) {
+      return '<div class="also-card">' +
+        '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
+        '<div class="also-name">' + c.name + '</div>' +
+        '<div class="also-fam">' + (c.fam || '') + '</div></div>';
+    }).join('');
+
+    close.forEach(function(c) {
+      var el = document.getElementById('ava-' + c.id);
+      if (!el) return;
+      var i2 = document.createElement('img');
+      i2.src = 'photos/characters/' + c.id + '.jpg';
+      i2.alt = c.name;
+      i2.onerror = function() { i2.remove(); };
+      i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
+      el.appendChild(i2);
+    });
+
+    var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
+      (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' +
+      restoreExp + '\n\nFind out who you are: ' + (location.href.split('?')[0]);
+    document.getElementById('share-text').textContent = shareText;
+    window._shareText = shareText;
+
+    document.getElementById('quiz-section').classList.add('hide');
+    document.getElementById('result-section').classList.add('show');
+
+    document.getElementById('card-status').textContent = 'Preparing your character card...';
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
+    } else {
+      prepareCardWithAssets(top, close);
+    }
+
+  } else {
+    render();
+  }
+
+} catch(e) {
+  render();
+}
   
 </script>
 </body>
