@@ -1310,26 +1310,27 @@ function downloadCard() {
     var isIOS = /iPhone|iPad|iPod/.test(ua);
 
    if (isInApp) {
-      // Instagram/Facebook block saving — tell user to open in real browser
-      if (msg) {
-        msg.style.color = '#f3e5ab';
-        msg.style.fontSize = '0.95rem';
-        msg.style.lineHeight = '1.5';
-        msg.textContent = '📱 Open this page in Safari or Chrome to download your card. In Instagram, tap the three dots (•••) at the top right → "Open in browser".';
-      }
-      return;
-    }
+  // Encode result ID into the URL so Chrome can restore it after redirect
+  var resultParam = '?r=' + encodeURIComponent(lastTop.id);
+  var fullUrl = location.href.split('?')[0] + resultParam;
 
-    if (isIOS) {
-      // iOS Safari — open image alone in same tab so user can long-press save
-      var w = window.open(dataUrl, '_blank');
-      if (!w) document.location.href = dataUrl;
-      if (msg) {
-        msg.textContent = 'Image opened in new tab — press and hold it, then tap Save Image.';
-        setTimeout(function() { msg.textContent = ''; }, 6000);
-      }
-      return;
-    }
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,4,13,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;text-align:center';
+  overlay.innerHTML =
+    '<div style="font-size:2.5rem;margin-bottom:16px">⚠️</div>' +
+    '<div style="font-family:Cinzel,Georgia,serif;color:#d4af37;font-size:1.2rem;font-weight:700;margin-bottom:14px">Instagram cannot save images</div>' +
+    '<div style="color:#f3e5ab;font-family:sans-serif;font-size:0.97rem;line-height:1.65;margin-bottom:24px">' +
+    'Instagram\'s browser blocks all downloads.<br><br>' +
+    '👉 Tap the <strong style="color:#d4af37">three dots ···</strong> at the top of your screen<br>' +
+    'then tap <strong style="color:#d4af37">"Open in Safari"</strong> or <strong style="color:#d4af37">"Open in Chrome"</strong><br><br>' +
+    'Your result will load automatically — then tap Download.' +
+    '</div>' +
+    '<div style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);border-radius:10px;padding:12px 18px;margin-bottom:20px;word-break:break-all;font-family:monospace;font-size:0.78rem;color:#d4af37;max-width:340px">' + fullUrl + '</div>' +
+    '<button onclick="this.parentNode.remove()" style="background:#d4af37;color:#1a1020;border:none;border-radius:99px;padding:12px 32px;font-family:sans-serif;font-weight:700;font-size:1rem;cursor:pointer">Got it</button>';
+  document.body.appendChild(overlay);
+  return;
+}
+    
 
     var a = document.createElement('a');
     a.href = dataUrl;
@@ -1415,80 +1416,11 @@ function restart() {
 // ── Init ──
 try {
   var savedTop = localStorage.getItem('rq_top');
-  var savedClose = localStorage.getItem('rq_close');
-  var savedExp = localStorage.getItem('rq_exp');
-  var savedNote = localStorage.getItem('rq_note');
+var savedClose = localStorage.getItem('rq_close');
+var savedExp = localStorage.getItem('rq_exp');
+var savedNote = localStorage.getItem('rq_note');
 
-  if (savedTop && savedClose) {
-    lastTop = JSON.parse(savedTop);
-    lastClose = JSON.parse(savedClose);
-    lastExplanation = savedExp || '';
-    lastMatchNote = savedNote || '';
-
-    var top = lastTop;
-    var close = lastClose;
-
-    var ava = document.getElementById('res-ava');
-    ava.innerHTML = '';
-    var img = document.createElement('img');
-    img.src = 'photos/characters/' + top.id + '.jpg';
-    img.alt = top.name;
-    img.onerror = function() { img.remove(); ava.textContent = initials(top.name); };
-    ava.appendChild(img);
-
-    document.getElementById('res-name').textContent = top.name;
-    document.getElementById('res-fam').textContent = top.fam ? top.fam + ' family' : '';
-    document.getElementById('res-role').textContent = top.role || '';
-
-    var traits = (top.traits || '').split(/[,;]\s*/).filter(Boolean);
-    document.getElementById('res-traits').innerHTML = traits.map(function(t) {
-      return '<span class="trait-chip">' + t + '</span>';
-    }).join('');
-
-    document.getElementById('res-why-main').textContent = lastExplanation;
-    document.getElementById('res-why-match').textContent = lastMatchNote;
-
-    var ag = document.getElementById('also-grid');
-    ag.innerHTML = close.map(function(c) {
-      return '<div class="also-card">' +
-        '<div class="also-ava" id="ava-' + c.id + '">' + initials(c.name) + '</div>' +
-        '<div class="also-name">' + c.name + '</div>' +
-        '<div class="also-fam">' + (c.fam || '') + '</div></div>';
-    }).join('');
-
-    close.forEach(function(c) {
-      var el = document.getElementById('ava-' + c.id);
-      if (!el) return;
-      var i2 = document.createElement('img');
-      i2.src = 'photos/characters/' + c.id + '.jpg';
-      i2.alt = c.name;
-      i2.onerror = function() { i2.remove(); };
-      i2.onload = function() { el.innerHTML = ''; el.appendChild(i2); };
-      el.appendChild(i2);
-    });
-
-    var shareText = 'I took the Rachayetria Universe character quiz and I am ' + top.name +
-      (top.fam ? ' of the ' + top.fam + ' family' : '') + '.\n\n' +
-      lastExplanation + '\n\nFind out who you are: ' + (location.href.split('?')[0]);
-    document.getElementById('share-text').textContent = shareText;
-    window._shareText = shareText;
-
-    document.getElementById('quiz-section').classList.add('hide');
-    document.getElementById('result-section').classList.add('show');
-
-    document.getElementById('card-status').textContent = 'Preparing your character card...';
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function() { prepareCardWithAssets(top, close); });
-    } else {
-      prepareCardWithAssets(top, close);
-    }
-
-  } else {
-    render();
-  }
-} catch(e) {
-  render();
-}
+if (savedTop && savedClose) {
   
 </script>
 </body>
