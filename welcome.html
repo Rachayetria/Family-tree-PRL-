@@ -1388,6 +1388,48 @@ function restart() {
 // ── Init ──
 render();
 </script>
+  <script>
+  function saveResultImage(fileName = "result.png") {
+    const canvas = document.querySelector("canvas");
+
+    if (canvas) {
+      canvas.toBlob(function (blob) {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const isIG = /Instagram|FBAN|FBAV/i.test(navigator.userAgent);
+
+        if (isIG) {
+          window.open(url, "_blank");
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          return;
+        }
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }, "image/png");
+      return;
+    }
+
+    const img = document.querySelector("#result img, .result img, img");
+    if (img && img.src) {
+      window.open(img.src, "_blank");
+    }
+  }
+
+  document.addEventListener("click", function (event) {
+    const btn = event.target.closest("button, a");
+    if (!btn) return;
+    const label = (btn.innerText || "").toLowerCase();
+    if (label.includes("download") || label.includes("save")) {
+      saveResultImage();
+    }
+  });
+</script>
 </body>
 </html>
 
