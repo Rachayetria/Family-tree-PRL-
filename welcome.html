@@ -1302,18 +1302,24 @@ function downloadCard() {
     var isInApp = /Instagram|FBAN|FBAV|Twitter|Line\/|MicroMessenger/.test(ua);
     var isIOS = /iPhone|iPad|iPod/.test(ua);
 
-    if (isIOS || isInApp) {
-      var w = window.open('', '_blank');
-      if (w) {
-        w.document.write(
-          '<html><head><title>Save your card</title></head><body style="margin:0;background:#07040d;text-align:center">' +
-          '<p style="color:#d4af37;font-family:sans-serif;padding:16px;margin:0">Press and hold the image, then tap <strong>Save Image</strong></p>' +
-          '<img src="' + dataUrl + '" style="max-width:100%;display:block;margin:0 auto">' +
-          '</body></html>'
-        );
-        w.document.close();
-      } else {
-        document.location.href = dataUrl;
+   if (isInApp) {
+      // Instagram/Facebook block saving — tell user to open in real browser
+      if (msg) {
+        msg.style.color = '#f3e5ab';
+        msg.style.fontSize = '0.95rem';
+        msg.style.lineHeight = '1.5';
+        msg.textContent = '📱 Open this page in Safari or Chrome to download your card. In Instagram, tap the three dots (•••) at the top right → "Open in browser".';
+      }
+      return;
+    }
+
+    if (isIOS) {
+      // iOS Safari — open image alone in same tab so user can long-press save
+      var w = window.open(dataUrl, '_blank');
+      if (!w) document.location.href = dataUrl;
+      if (msg) {
+        msg.textContent = 'Image opened in new tab — press and hold it, then tap Save Image.';
+        setTimeout(function() { msg.textContent = ''; }, 6000);
       }
       return;
     }
